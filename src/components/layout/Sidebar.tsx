@@ -25,6 +25,8 @@ import {
     Settings as SettingsIcon,
     HelpOutline as HelpIcon,
     Logout as LogoutIcon,
+    Person as FreelancerIcon,
+    Language as PortalIcon,
 } from '@mui/icons-material';
 
 const SIDEBAR_WIDTH = 260;
@@ -42,6 +44,8 @@ const mainNavItems: NavItem[] = [
     { label: 'Contacts', icon: <ContactsIcon />, path: '/contacts' },
     { label: 'Clients', icon: <ClientsIcon />, path: '/clients' },
     { label: 'Projects', icon: <ProjectsIcon />, path: '/projects', badge: 12 },
+    { label: 'Freelancer Portal', icon: <FreelancerIcon />, path: '/freelancer' },
+    { label: 'Client Portal', icon: <PortalIcon />, path: '/client-portal' },
 ];
 
 const bottomNavItems: NavItem[] = [
@@ -66,7 +70,7 @@ export default function Sidebar() {
                     background: 'linear-gradient(180deg, #0F172A 0%, #1E293B 100%)',
                     borderRight: 'none',
                     borderRadius: 0,
-                    color: '#CBD5E1',
+                    color: '#FFFFFF',
                 },
             }}
         >
@@ -94,7 +98,7 @@ export default function Sidebar() {
                     >
                         Operations Hub
                     </Typography>
-                    <Typography variant="caption" sx={{ color: '#64748B', fontSize: '0.7rem' }}>
+                    <Typography variant="caption" sx={{ color: '#FFFFFF', fontSize: '0.7rem' }}>
                         Internal Portal
                     </Typography>
                 </Box>
@@ -107,7 +111,7 @@ export default function Sidebar() {
                 <Typography
                     variant="overline"
                     sx={{
-                        color: '#475569',
+                        color: '#FFFFFF',
                         fontSize: '0.65rem',
                         fontWeight: 600,
                         letterSpacing: '0.1em',
@@ -127,7 +131,7 @@ export default function Sidebar() {
                                         borderRadius: '10px',
                                         py: 1,
                                         px: 1.5,
-                                        color: isActive(item.path) ? '#FFFFFF' : '#94A3B8',
+                                        color: '#FFFFFF',
                                         backgroundColor: isActive(item.path) ? 'rgba(22, 163, 74, 0.15)' : 'transparent',
                                         '&:hover': {
                                             backgroundColor: isActive(item.path)
@@ -141,7 +145,7 @@ export default function Sidebar() {
                                     <ListItemIcon
                                         sx={{
                                             minWidth: 36,
-                                            color: isActive(item.path) ? '#22C55E' : '#64748B',
+                                            color: '#FFFFFF',
                                             '& .MuiSvgIcon-root': { fontSize: '1.25rem' },
                                         }}
                                     >
@@ -163,7 +167,7 @@ export default function Sidebar() {
                                                     backgroundColor: isActive(item.path)
                                                         ? 'rgba(22, 163, 74, 0.3)'
                                                         : 'rgba(255,255,255,0.1)',
-                                                    color: isActive(item.path) ? '#22C55E' : '#94A3B8',
+                                                    color: '#FFFFFF',
                                                     fontSize: '0.7rem',
                                                     fontWeight: 600,
                                                     minWidth: 24,
@@ -194,7 +198,7 @@ export default function Sidebar() {
                                     borderRadius: '10px',
                                     py: 1,
                                     px: 1.5,
-                                    color: '#94A3B8',
+                                    color: '#FFFFFF',
                                     '&:hover': {
                                         backgroundColor: 'rgba(255,255,255,0.05)',
                                         color: '#FFFFFF',
@@ -204,7 +208,7 @@ export default function Sidebar() {
                                 <ListItemIcon
                                     sx={{
                                         minWidth: 36,
-                                        color: '#64748B',
+                                        color: '#FFFFFF',
                                         '& .MuiSvgIcon-root': { fontSize: '1.25rem' },
                                     }}
                                 >
@@ -238,15 +242,15 @@ export default function Sidebar() {
                 <Box sx={{ flex: 1, minWidth: 0 }}>
                     <Typography
                         variant="body2"
-                        sx={{ color: '#F1F5F9', fontWeight: 600, fontSize: '0.82rem', lineHeight: 1.3 }}
+                        sx={{ color: '#FFFFFF', fontWeight: 600, fontSize: '0.82rem', lineHeight: 1.3 }}
                     >
                         Ankit Singh
                     </Typography>
-                    <Typography variant="caption" sx={{ color: '#64748B', fontSize: '0.7rem' }}>
+                    <Typography variant="caption" sx={{ color: '#FFFFFF', fontSize: '0.7rem' }}>
                         Administrator
                     </Typography>
                 </Box>
-                <LogoutIcon sx={{ fontSize: '1.1rem', color: '#64748B', cursor: 'pointer' }} />
+                <LogoutIcon sx={{ fontSize: '1.1rem', color: '#FFFFFF', cursor: 'pointer' }} />
             </Box>
         </Drawer>
     );
