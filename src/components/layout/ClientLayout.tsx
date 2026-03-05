@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { usePathname } from 'next/navigation';
 import { ThemeProvider } from '@mui/material/styles';
 import { CssBaseline, Box } from '@mui/material';
 import theme from '@/theme/theme';
@@ -9,31 +10,38 @@ import Sidebar, { SIDEBAR_WIDTH } from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
+    const pathname = usePathname();
+    const isAuthRoute = pathname === '/login' || pathname === '/signup';
+
     return (
         <ReduxProvider>
             <ThemeProvider theme={theme}>
                 <CssBaseline />
-                <Box sx={{ display: 'flex', minHeight: '100vh', backgroundColor: '#F1F5F9' }}>
-                    <Sidebar />
-                    <Box
-                        component="main"
-                        sx={{
-                            flexGrow: 1,
-                            width: `calc(100% - ${SIDEBAR_WIDTH}px)`,
-                            minHeight: '100vh',
-                        }}
-                    >
-                        <Header />
+                {isAuthRoute ? (
+                    <Box sx={{ minHeight: '100vh', backgroundColor: '#F8FAFC' }}>{children}</Box>
+                ) : (
+                    <Box sx={{ display: 'flex', minHeight: '100vh', backgroundColor: '#F1F5F9' }}>
+                        <Sidebar />
                         <Box
+                            component="main"
                             sx={{
-                                pt: '64px', // Header height
+                                flexGrow: 1,
+                                width: `calc(100% - ${SIDEBAR_WIDTH}px)`,
                                 minHeight: '100vh',
                             }}
                         >
-                            {children}
+                            <Header />
+                            <Box
+                                sx={{
+                                    pt: '64px',
+                                    minHeight: '100vh',
+                                }}
+                            >
+                                {children}
+                            </Box>
                         </Box>
                     </Box>
-                </Box>
+                )}
             </ThemeProvider>
         </ReduxProvider>
     );

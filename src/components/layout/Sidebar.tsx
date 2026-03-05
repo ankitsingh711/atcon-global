@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
     Box,
@@ -15,6 +15,7 @@ import {
     Avatar,
     Divider,
     Badge,
+    IconButton,
 } from '@mui/material';
 import {
     Dashboard as DashboardIcon,
@@ -55,8 +56,20 @@ const bottomNavItems: NavItem[] = [
 
 export default function Sidebar() {
     const pathname = usePathname();
+    const router = useRouter();
 
     const isActive = (path: string) => pathname?.startsWith(path);
+
+    async function handleLogout() {
+        try {
+            await fetch('/api/auth/logout', { method: 'POST' });
+        } catch {
+            // Ignore network errors and force logout flow on client side.
+        } finally {
+            router.push('/login');
+            router.refresh();
+        }
+    }
 
     return (
         <Drawer
@@ -250,7 +263,17 @@ export default function Sidebar() {
                         Administrator
                     </Typography>
                 </Box>
-                <LogoutIcon sx={{ fontSize: '1.1rem', color: '#FFFFFF', cursor: 'pointer' }} />
+                <IconButton
+                    size="small"
+                    onClick={handleLogout}
+                    sx={{
+                        color: '#FFFFFF',
+                        '&:hover': { backgroundColor: 'rgba(255,255,255,0.08)' },
+                    }}
+                    aria-label="Log out"
+                >
+                    <LogoutIcon sx={{ fontSize: '1.1rem' }} />
+                </IconButton>
             </Box>
         </Drawer>
     );
