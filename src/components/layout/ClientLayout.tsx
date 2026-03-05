@@ -12,6 +12,7 @@ import Header from '@/components/layout/Header';
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const isAuthRoute = pathname === '/login' || pathname === '/signup';
+    const isPortalRoute = pathname?.startsWith('/employee') || pathname?.startsWith('/freelancer');
 
     return (
         <ReduxProvider>
@@ -19,6 +20,8 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
                 <CssBaseline />
                 {isAuthRoute ? (
                     <Box sx={{ minHeight: '100vh', backgroundColor: '#F8FAFC' }}>{children}</Box>
+                ) : isPortalRoute ? (
+                    <Box sx={{ minHeight: '100vh', backgroundColor: '#F1F5F9' }}>{children}</Box>
                 ) : (
                     <Box sx={{ display: 'flex', minHeight: '100vh', backgroundColor: '#F1F5F9' }}>
                         <Sidebar />

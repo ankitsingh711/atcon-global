@@ -45,6 +45,7 @@ const mainNavItems: NavItem[] = [
     { label: 'Contacts', icon: <ContactsIcon />, path: '/contacts' },
     { label: 'Clients', icon: <ClientsIcon />, path: '/clients' },
     { label: 'Projects', icon: <ProjectsIcon />, path: '/projects', badge: 12 },
+    { label: 'Employee Portal', icon: <FreelancerIcon />, path: '/employee' },
     { label: 'Freelancer Portal', icon: <FreelancerIcon />, path: '/freelancer' },
     { label: 'Client Portal', icon: <PortalIcon />, path: '/client-portal' },
 ];
