@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/mongodb';
-import Client from '@/lib/models/Client';
-import Project from '@/lib/models/Project';
-import Activity from '@/lib/models/Activity';
+import { ClientRecord, createObjectId, getStore } from '@/lib/memory-store';
 
 const STATUS_OPTIONS = ['Active', 'Inactive', 'Prospect'] as const;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -17,34 +14,29 @@ interface ClientRequestBody {
 
 export async function GET() {
     try {
-        await dbConnect();
+        const store = getStore();
 
-        const [clients, projectSummary] = await Promise.all([
-            Client.find({}).sort({ name: 1 }).lean(),
-            Project.aggregate<{ _id: string; projects: number; revenue: number }>([
-                {
-                    $group: {
-                        _id: '$client',
-                        projects: { $sum: 1 },
-                        revenue: { $sum: '$budget' },
-                    },
-                },
-            ]),
-        ]);
+        const clients = [...store.clients].sort((a, b) =>
+            a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
+        );
 
-        const summaryMap = new Map(
-            projectSummary.map((entry) => [
-                entry._id,
-                { projects: entry.projects, revenue: entry.revenue },
-            ])
+        const summary = store.projects.reduce<Map<string, { projects: number; revenue: number }>>(
+            (acc, project) => {
+                const current = acc.get(project.client) ?? { projects: 0, revenue: 0 };
+                current.projects += 1;
+                current.revenue += project.budget;
+                acc.set(project.client, current);
+                return acc;
+            },
+            new Map()
         );
 
         const clientsWithStats = clients.map((client) => {
-            const summary = summaryMap.get(client.name) || { projects: 0, revenue: 0 };
+            const stats = summary.get(client.name) ?? { projects: 0, revenue: 0 };
             return {
                 ...client,
-                projects: summary.projects,
-                revenue: summary.revenue,
+                projects: stats.projects,
+                revenue: stats.revenue,
             };
         });
 
@@ -86,26 +78,34 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        await dbConnect();
-
-        const client = await Client.create({
+        const now = new Date().toISOString();
+        const client: ClientRecord = {
+            _id: createObjectId(),
+            createdAt: now,
+            updatedAt: now,
             name,
             company: name,
             email,
             industry: body.industry?.trim() ?? '',
             contact: body.contact?.trim() ?? '',
             status,
-        });
+        };
 
-        await Activity.create({
+        const store = getStore();
+        store.clients.push(client);
+
+        store.activities.unshift({
+            _id: createObjectId(),
+            createdAt: now,
+            updatedAt: now,
             user: 'CRM',
             action: `New client added: ${name}`,
             color: '#3B82F6',
-            occurredAt: new Date(),
+            occurredAt: now,
         });
 
         return NextResponse.json(
-            { success: true, data: { ...client.toObject(), projects: 0, revenue: 0 } },
+            { success: true, data: { ...client, projects: 0, revenue: 0 } },
             { status: 201 }
         );
     } catch (error) {

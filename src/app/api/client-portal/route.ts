@@ -1,17 +1,19 @@
 import { NextResponse } from 'next/server';
-import dbConnect from '@/lib/mongodb';
-import Client from '@/lib/models/Client';
-import Project from '@/lib/models/Project';
+import { getStore } from '@/lib/memory-store';
 
 export async function GET() {
     try {
-        await dbConnect();
+        const store = getStore();
+        const client = [...store.clients].sort(
+            (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        )[0];
 
-        const client = await Client.findOne({}).sort({ createdAt: 1 }).lean();
         const clientName = client?.name ?? 'Acme Corporation';
         const contactName = client?.contact || 'Client Contact';
 
-        const projects = await Project.find({ client: clientName }).sort({ startDate: 1 }).lean();
+        const projects = store.projects
+            .filter((project) => project.client === clientName)
+            .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
 
         const statusMap: Record<string, string> = {
             'In Progress': 'On Track',
@@ -26,16 +28,22 @@ export async function GET() {
                     clientName,
                     contactName,
                     stats: {
-                        activeProjects: projects.filter((p) => p.status !== 'Completed' && p.status !== 'Cancelled').length,
+                        activeProjects: projects.filter(
+                            (project) =>
+                                project.status !== 'Completed' && project.status !== 'Cancelled'
+                        ).length,
                         pendingTimesheets: 5,
                         openTickets: 2,
                         recentInvoices: 4,
                     },
                     projects: projects
-                        .filter((p) => p.status !== 'Completed' && p.status !== 'Cancelled')
+                        .filter(
+                            (project) =>
+                                project.status !== 'Completed' && project.status !== 'Cancelled'
+                        )
                         .slice(0, 5)
                         .map((project) => ({
-                            id: project._id.toString(),
+                            id: project._id,
                             name: project.name,
                             status: statusMap[project.status] || project.status,
                             progress: project.progress,

@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/mongodb';
-import Deal from '@/lib/models/Deal';
-import Activity from '@/lib/models/Activity';
+import { createObjectId, DealRecord, getStore } from '@/lib/memory-store';
 
 const STAGES = ['Lead', 'Qualified', 'Proposal', 'Negotiation', 'Closed Won'] as const;
 
@@ -15,29 +13,24 @@ interface DealRequestBody {
 
 export async function GET(request: NextRequest) {
     try {
-        await dbConnect();
-
         const { searchParams } = new URL(request.url);
-        const search = searchParams.get('search')?.trim() || '';
+        const search = searchParams.get('search')?.trim().toLowerCase() || '';
         const stage = searchParams.get('stage')?.trim() || '';
 
-        const filter: {
-            $or?: Array<{ name?: { $regex: string; $options: string }; client?: { $regex: string; $options: string } }>;
-            stage?: string;
-        } = {};
+        const deals = getStore()
+            .deals.filter((deal) => {
+                const matchesSearch =
+                    !search ||
+                    deal.name.toLowerCase().includes(search) ||
+                    deal.client.toLowerCase().includes(search);
+                const matchesStage =
+                    !stage ||
+                    !STAGES.includes(stage as (typeof STAGES)[number]) ||
+                    deal.stage === stage;
+                return matchesSearch && matchesStage;
+            })
+            .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
-        if (search) {
-            filter.$or = [
-                { name: { $regex: search, $options: 'i' } },
-                { client: { $regex: search, $options: 'i' } },
-            ];
-        }
-
-        if (stage && STAGES.includes(stage as (typeof STAGES)[number])) {
-            filter.stage = stage;
-        }
-
-        const deals = await Deal.find(filter).sort({ createdAt: -1 }).lean();
         return NextResponse.json({ success: true, data: deals }, { status: 200 });
     } catch (error) {
         console.error('GET /api/deals error:', error);
@@ -85,21 +78,28 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        await dbConnect();
-
-        const deal = await Deal.create({
+        const now = new Date().toISOString();
+        const deal: DealRecord = {
+            _id: createObjectId(),
+            createdAt: now,
+            updatedAt: now,
             name,
             client,
             stage,
             value,
             probability,
-        });
+        };
 
-        await Activity.create({
+        const store = getStore();
+        store.deals.push(deal);
+        store.activities.unshift({
+            _id: createObjectId(),
+            createdAt: now,
+            updatedAt: now,
             user: 'Sales',
             action: `New deal created: ${name}`,
             color: '#6366F1',
-            occurredAt: new Date(),
+            occurredAt: now,
         });
 
         return NextResponse.json({ success: true, data: deal }, { status: 201 });

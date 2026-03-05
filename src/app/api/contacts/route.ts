@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/mongodb';
-import Contact from '@/lib/models/Contact';
-import Activity from '@/lib/models/Activity';
+import { ContactRecord, createObjectId, getStore } from '@/lib/memory-store';
 
 const STATUS_OPTIONS = ['Active', 'Inactive'] as const;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -17,34 +15,25 @@ interface ContactRequestBody {
 
 export async function GET(request: NextRequest) {
     try {
-        await dbConnect();
-
         const { searchParams } = new URL(request.url);
-        const search = searchParams.get('search')?.trim() || '';
+        const search = searchParams.get('search')?.trim().toLowerCase() || '';
         const status = searchParams.get('status')?.trim() || '';
 
-        const filter: {
-            $or?: Array<{
-                name?: { $regex: string; $options: string };
-                email?: { $regex: string; $options: string };
-                company?: { $regex: string; $options: string };
-            }>;
-            status?: string;
-        } = {};
+        const contacts = getStore()
+            .contacts.filter((contact) => {
+                const matchesSearch =
+                    !search ||
+                    contact.name.toLowerCase().includes(search) ||
+                    contact.email.toLowerCase().includes(search) ||
+                    contact.company.toLowerCase().includes(search);
+                const matchesStatus =
+                    !status ||
+                    !STATUS_OPTIONS.includes(status as (typeof STATUS_OPTIONS)[number]) ||
+                    contact.status === status;
+                return matchesSearch && matchesStatus;
+            })
+            .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
-        if (search) {
-            filter.$or = [
-                { name: { $regex: search, $options: 'i' } },
-                { email: { $regex: search, $options: 'i' } },
-                { company: { $regex: search, $options: 'i' } },
-            ];
-        }
-
-        if (status && STATUS_OPTIONS.includes(status as (typeof STATUS_OPTIONS)[number])) {
-            filter.status = status;
-        }
-
-        const contacts = await Contact.find(filter).sort({ createdAt: -1 }).lean();
         return NextResponse.json({ success: true, data: contacts }, { status: 200 });
     } catch (error) {
         console.error('GET /api/contacts error:', error);
@@ -83,22 +72,29 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        await dbConnect();
-
-        const contact = await Contact.create({
+        const now = new Date().toISOString();
+        const contact: ContactRecord = {
+            _id: createObjectId(),
+            createdAt: now,
+            updatedAt: now,
             name,
             email,
             phone: body.phone?.trim() ?? '',
             company: body.company?.trim() ?? '',
             role: body.role?.trim() ?? '',
             status,
-        });
+        };
 
-        await Activity.create({
+        const store = getStore();
+        store.contacts.push(contact);
+        store.activities.unshift({
+            _id: createObjectId(),
+            createdAt: now,
+            updatedAt: now,
             user: 'CRM',
             action: `New contact added: ${name}`,
             color: '#16A34A',
-            occurredAt: new Date(),
+            occurredAt: now,
         });
 
         return NextResponse.json({ success: true, data: contact }, { status: 201 });

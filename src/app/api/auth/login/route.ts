@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/mongodb';
-import User from '@/lib/models/User';
+import { getStore } from '@/lib/memory-store';
 import { verifyPassword } from '@/lib/auth/password';
 import { createSessionToken, setSessionCookie } from '@/lib/auth/session';
 
@@ -31,9 +30,7 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        await dbConnect();
-
-        const user = await User.findOne({ email }).select('+passwordHash');
+        const user = getStore().users.find((entry) => entry.email === email);
         if (!user || !user.passwordHash) {
             return NextResponse.json(
                 { success: false, error: 'Invalid email or password' },
@@ -50,7 +47,7 @@ export async function POST(request: NextRequest) {
         }
 
         const token = createSessionToken({
-            id: user.id,
+            id: user._id,
             email: user.email,
             name: user.name,
         });
@@ -59,7 +56,7 @@ export async function POST(request: NextRequest) {
             {
                 success: true,
                 data: {
-                    id: user.id,
+                    id: user._id,
                     name: user.name,
                     email: user.email,
                 },

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/mongodb';
-import User from '@/lib/models/User';
+import { createObjectId, getStore } from '@/lib/memory-store';
 import { hashPassword } from '@/lib/auth/password';
 import { createSessionToken, setSessionCookie } from '@/lib/auth/session';
 
@@ -40,9 +39,8 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        await dbConnect();
-
-        const existingUser = await User.findOne({ email }).lean();
+        const store = getStore();
+        const existingUser = store.users.find((user) => user.email === email);
         if (existingUser) {
             return NextResponse.json(
                 { success: false, error: 'An account with this email already exists' },
@@ -51,14 +49,20 @@ export async function POST(request: NextRequest) {
         }
 
         const passwordHash = await hashPassword(password);
-        const user = await User.create({
+        const now = new Date().toISOString();
+        const user = {
+            _id: createObjectId(),
+            createdAt: now,
+            updatedAt: now,
             name,
             email,
             passwordHash,
-        });
+        };
+
+        store.users.push(user);
 
         const token = createSessionToken({
-            id: user.id,
+            id: user._id,
             email: user.email,
             name: user.name,
         });
@@ -67,7 +71,7 @@ export async function POST(request: NextRequest) {
             {
                 success: true,
                 data: {
-                    id: user.id,
+                    id: user._id,
                     name: user.name,
                     email: user.email,
                 },
@@ -77,14 +81,7 @@ export async function POST(request: NextRequest) {
 
         setSessionCookie(response, token);
         return response;
-    } catch (error: unknown) {
-        if (typeof error === 'object' && error !== null && 'code' in error && error.code === 11000) {
-            return NextResponse.json(
-                { success: false, error: 'An account with this email already exists' },
-                { status: 409 }
-            );
-        }
-
+    } catch (error) {
         console.error('POST /api/auth/signup error:', error);
         return NextResponse.json(
             { success: false, error: 'Failed to create account' },

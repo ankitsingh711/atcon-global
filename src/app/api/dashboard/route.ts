@@ -1,10 +1,5 @@
 import { NextResponse } from 'next/server';
-import dbConnect from '@/lib/mongodb';
-import Deal from '@/lib/models/Deal';
-import Project from '@/lib/models/Project';
-import Contact from '@/lib/models/Contact';
-import Activity from '@/lib/models/Activity';
-import Approval from '@/lib/models/Approval';
+import { getStore } from '@/lib/memory-store';
 
 function formatRelativeTime(date: Date): string {
     const diffMs = Date.now() - date.getTime();
@@ -36,18 +31,18 @@ function formatDueLabel(date: Date): string {
 
 export async function GET() {
     try {
-        await dbConnect();
+        const store = getStore();
 
-        const [deals, projects, contacts, activities, pendingApprovals] = await Promise.all([
-            Deal.find({}).lean(),
-            Project.find({}).lean(),
-            Contact.find({ status: 'Active' }).lean(),
-            Activity.find({}).sort({ occurredAt: -1 }).limit(8).lean(),
-            Approval.find({ context: 'dashboard', status: 'Pending' })
-                .sort({ dueDate: 1 })
-                .limit(6)
-                .lean(),
-        ]);
+        const deals = store.deals;
+        const projects = store.projects;
+        const contacts = store.contacts.filter((contact) => contact.status === 'Active');
+        const activities = [...store.activities]
+            .sort((a, b) => new Date(b.occurredAt).getTime() - new Date(a.occurredAt).getTime())
+            .slice(0, 8);
+        const pendingApprovals = store.approvals
+            .filter((approval) => approval.context === 'dashboard' && approval.status === 'Pending')
+            .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
+            .slice(0, 6);
 
         const activeDeals = deals.filter((deal) => deal.stage !== 'Closed Won').length;
         const monthlyRevenue = deals
@@ -69,14 +64,14 @@ export async function GET() {
                         teamMembers,
                     },
                     recentActivity: activities.map((activity) => ({
-                        id: activity._id.toString(),
+                        id: activity._id,
                         user: activity.user,
                         action: activity.action,
                         color: activity.color,
                         time: formatRelativeTime(new Date(activity.occurredAt)),
                     })),
                     pendingApprovals: pendingApprovals.map((approval) => ({
-                        id: approval._id.toString(),
+                        id: approval._id,
                         type: approval.type,
                         title: approval.title,
                         due: formatDueLabel(new Date(approval.dueDate)),

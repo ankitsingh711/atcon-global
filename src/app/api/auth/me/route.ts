@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/mongodb';
-import User from '@/lib/models/User';
+import { getStore } from '@/lib/memory-store';
 import {
     AUTH_COOKIE_NAME,
     clearSessionCookie,
@@ -23,8 +22,7 @@ export async function GET(request: NextRequest) {
             return response;
         }
 
-        await dbConnect();
-        const user = await User.findById(session.sub).lean();
+        const user = getStore().users.find((entry) => entry._id === session.sub);
 
         if (!user) {
             const response = NextResponse.json(
@@ -36,7 +34,7 @@ export async function GET(request: NextRequest) {
         }
 
         const refreshedToken = createSessionToken({
-            id: user._id.toString(),
+            id: user._id,
             email: user.email,
             name: user.name,
         });
@@ -45,7 +43,7 @@ export async function GET(request: NextRequest) {
             {
                 success: true,
                 data: {
-                    id: user._id.toString(),
+                    id: user._id,
                     name: user.name,
                     email: user.email,
                 },

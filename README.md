@@ -22,13 +22,15 @@ This project uses [`next/font`](https://nextjs.org/docs/app/building-your-applic
 
 ## Authentication setup
 
-Set these variables in your `.env.local`:
+Set this variable in your `.env.local`:
 
 ```bash
-MONGODB_URI=mongodb://localhost:27017/atcon-projects
 AUTH_SECRET=replace-with-a-long-random-secret
 ```
 
+The app uses an in-memory JSON datastore, so no database connection is required.
+- `POST /api/seed` resets the in-memory store to the default sample data.
+- Data does not persist across server restarts.
 `AUTH_SECRET` has a development fallback in code, but you should always set it explicitly for production.
 
 ## Learn More

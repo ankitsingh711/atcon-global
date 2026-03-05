@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/mongodb';
-import Project from '@/lib/models/Project';
-import Approval from '@/lib/models/Approval';
-import FreelancerData from '@/lib/models/FreelancerData';
+import {
+    copyRows,
+    createObjectId,
+    FreelancerDataRecord,
+    getStore,
+    TimesheetRow,
+    touchRecord,
+} from '@/lib/memory-store';
 
 interface TimesheetRowInput {
     project: string;
@@ -17,7 +21,11 @@ interface FreelancerUpdateBody {
 
 function formatWeekRange(weekStart: Date, weekEnd: Date): string {
     const startLabel = weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    const endLabel = weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    const endLabel = weekEnd.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+    });
     return `${startLabel} - ${endLabel}`;
 }
 
@@ -33,17 +41,19 @@ function isValidRow(row: TimesheetRowInput): boolean {
     );
 }
 
-async function ensureFreelancerData() {
-    let freelancerData = await FreelancerData.findOne({}).sort({ createdAt: 1 });
+function ensureFreelancerData(): FreelancerDataRecord {
+    const store = getStore();
 
-    if (!freelancerData) {
-        const weekStart = new Date('2026-01-13');
-        const weekEnd = new Date('2026-01-19');
-        freelancerData = await FreelancerData.create({
+    if (!store.freelancerData) {
+        const now = new Date().toISOString();
+        store.freelancerData = {
+            _id: createObjectId(),
+            createdAt: now,
+            updatedAt: now,
             name: 'Alex Thompson',
             role: 'Senior Designer',
-            weekStart,
-            weekEnd,
+            weekStart: new Date('2026-01-13').toISOString(),
+            weekEnd: new Date('2026-01-19').toISOString(),
             timesheetStatus: 'Draft',
             rows: [
                 {
@@ -62,29 +72,30 @@ async function ensureFreelancerData() {
                     hours: [0, 0, 0, 0, 0, 2, 0],
                 },
             ],
-        });
+        };
     }
 
-    return freelancerData;
+    return store.freelancerData;
 }
 
 export async function GET() {
     try {
-        await dbConnect();
+        const store = getStore();
+        const freelancerData = ensureFreelancerData();
+        const activeProjects = store.projects
+            .filter((project) => project.status === 'In Progress' || project.status === 'Planning')
+            .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
+            .slice(0, 5);
 
-        const [freelancerData, activeProjects, pendingApprovals] = await Promise.all([
-            ensureFreelancerData(),
-            Project.find({ status: { $in: ['In Progress', 'Planning'] } })
-                .sort({ startDate: 1 })
-                .limit(5)
-                .lean(),
-            Approval.countDocuments({ context: 'client-portal', status: 'Pending' }),
-        ]);
+        const pendingApprovals = store.approvals.filter(
+            (approval) => approval.context === 'client-portal' && approval.status === 'Pending'
+        ).length;
 
         const totalHours = freelancerData.rows.reduce(
             (grandTotal, row) => grandTotal + row.hours.reduce((sum, hours) => sum + hours, 0),
             0
         );
+
         const dailyTotals = Array.from({ length: 7 }, (_, dayIndex) =>
             freelancerData.rows.reduce((sum, row) => sum + (row.hours[dayIndex] || 0), 0)
         );
@@ -103,7 +114,7 @@ export async function GET() {
                         pendingApprovals,
                     },
                     projects: activeProjects.map((project) => ({
-                        id: project._id.toString(),
+                        id: project._id,
                         name: project.name,
                         client: project.client,
                         progress: project.progress,
@@ -122,7 +133,7 @@ export async function GET() {
                             new Date(freelancerData.weekEnd)
                         ),
                         status: freelancerData.timesheetStatus,
-                        rows: freelancerData.rows,
+                        rows: copyRows(freelancerData.rows),
                         dailyTotals,
                         totalHours,
                         billableHours: Number((totalHours * 0.9).toFixed(1)),
@@ -151,20 +162,20 @@ export async function PUT(request: NextRequest) {
             );
         }
 
-        await dbConnect();
-        const freelancerData = await ensureFreelancerData();
-
-        freelancerData.rows = body.rows.map((row) => ({
+        const freelancerData = ensureFreelancerData();
+        const nextRows: TimesheetRow[] = body.rows.map((row) => ({
             project: row.project.trim(),
             task: row.task.trim(),
             hours: row.hours.map((hours) => Number(hours)),
         }));
 
+        freelancerData.rows = nextRows;
+
         if (body.status && ['Draft', 'Submitted', 'Approved'].includes(body.status)) {
             freelancerData.timesheetStatus = body.status;
         }
 
-        await freelancerData.save();
+        touchRecord(freelancerData);
 
         return NextResponse.json({ success: true }, { status: 200 });
     } catch (error) {
