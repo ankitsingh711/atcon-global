@@ -1,4 +1,6 @@
 import crypto from 'crypto';
+import fs from 'fs';
+import path from 'path';
 
 export type ProjectStatus = 'Planning' | 'In Progress' | 'Completed' | 'On Hold' | 'Cancelled';
 export type BillingType = 'Fixed Price' | 'Hourly' | 'Retainer';
@@ -166,7 +168,24 @@ export interface MemoryStore {
     users: UserRecord[];
 }
 
+interface JsonDbFileShape {
+    users: UserRecord[];
+    projects: ProjectRecord[];
+    clients: ClientRecord[];
+    deals: DealRecord[];
+    contacts: ContactRecord[];
+    approvals: ApprovalRecord[];
+    activities: ActivityRecord[];
+    freelancerData: FreelancerDataRecord[] | FreelancerDataRecord | null;
+    people: PersonRecord[];
+    talent: TalentRecord[];
+    forms: FormEntryRecord[];
+    supportTickets: SupportTicketRecord[];
+    invoices: InvoiceRecord[];
+}
+
 const OBJECT_ID_REGEX = /^[a-f\d]{24}$/i;
+const JSON_DB_FILE_PATH = path.join(process.cwd(), 'src', 'lib', 'data', 'json-db.json');
 
 function toIso(value: Date | string): string {
     return new Date(value).toISOString();
@@ -1051,19 +1070,61 @@ function createSeedStore(): MemoryStore {
     };
 }
 
+function toArray<T>(value: unknown): T[] {
+    return Array.isArray(value) ? (value as T[]) : [];
+}
+
+function loadStoreFromJsonDbFile(): MemoryStore | null {
+    try {
+        if (!fs.existsSync(JSON_DB_FILE_PATH)) {
+            return null;
+        }
+
+        const raw = fs.readFileSync(JSON_DB_FILE_PATH, 'utf8');
+        if (!raw.trim()) {
+            return null;
+        }
+
+        const parsed = JSON.parse(raw) as Partial<Record<keyof JsonDbFileShape, unknown>>;
+        const freelancerRaw = parsed.freelancerData;
+        const freelancerData = Array.isArray(freelancerRaw)
+            ? ((freelancerRaw[0] as FreelancerDataRecord | undefined) ?? null)
+            : ((freelancerRaw as FreelancerDataRecord | null | undefined) ?? null);
+
+        return {
+            users: toArray<UserRecord>(parsed.users),
+            projects: toArray<ProjectRecord>(parsed.projects),
+            clients: toArray<ClientRecord>(parsed.clients),
+            deals: toArray<DealRecord>(parsed.deals),
+            contacts: toArray<ContactRecord>(parsed.contacts),
+            activities: toArray<ActivityRecord>(parsed.activities),
+            approvals: toArray<ApprovalRecord>(parsed.approvals),
+            freelancerData,
+            invoices: toArray<InvoiceRecord>(parsed.invoices),
+            forms: toArray<FormEntryRecord>(parsed.forms),
+            people: toArray<PersonRecord>(parsed.people),
+            supportTickets: toArray<SupportTicketRecord>(parsed.supportTickets),
+            talent: toArray<TalentRecord>(parsed.talent),
+        };
+    } catch (error) {
+        console.error('Failed to load JSON seed data. Falling back to built-in seed.', error);
+        return null;
+    }
+}
+
 declare global {
     var atconMemoryStore: MemoryStore | undefined;
 }
 
 export function getStore(): MemoryStore {
     if (!global.atconMemoryStore) {
-        global.atconMemoryStore = createSeedStore();
+        global.atconMemoryStore = loadStoreFromJsonDbFile() ?? createSeedStore();
     }
 
     return global.atconMemoryStore;
 }
 
 export function resetStore(): MemoryStore {
-    global.atconMemoryStore = createSeedStore();
+    global.atconMemoryStore = loadStoreFromJsonDbFile() ?? createSeedStore();
     return global.atconMemoryStore;
 }

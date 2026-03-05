@@ -1,15 +1,656 @@
 {
-  "users": [],
-  "projects": [],
-  "clients": [],
-  "deals": [],
-  "contacts": [],
-  "activities": [],
-  "approvals": [],
-  "freelancerData": [],
-  "invoices": [],
-  "forms": [],
-  "people": [],
-  "supportTickets": [],
-  "talent": []
+  "users": [
+    {
+      "name": "Admin User",
+      "email": "admin@atcon.com",
+      "passwordHash": "da4f2cb98f399bbe367b2d4b2e611774:8ac7328a0d4011bf142bf825e8889ed010bd3396cf6e9e95b4f9e92a7c72ca1a14fd954e0c500d31611b881f84c5a54b74f2368ce64756e90e61b57444e7c038",
+      "_id": "2b220754c500bedd53b7000e",
+      "createdAt": "2026-01-01T08:00:00.000Z",
+      "updatedAt": "2026-01-01T08:00:00.000Z"
+    },
+    {
+      "name": "Project Manager",
+      "email": "pm@atcon.com",
+      "passwordHash": "8a896dd724dc6aa118f4c9b0ad5bb1cf:727e275694e3a0ceaa52bcddad410102bcc76a95ef2fb7b6cbce7fbb28ff7003ca462f5f390ec79cfc470678e7c562237d3675bc16a9a6b3f4c0f0d24f8ae332",
+      "_id": "341c59371c5a4f0252e92c4e",
+      "createdAt": "2026-01-02T08:00:00.000Z",
+      "updatedAt": "2026-01-02T08:00:00.000Z"
+    }
+  ],
+  "projects": [
+    {
+      "name": "Website Redesign",
+      "client": "Acme Corporation",
+      "status": "In Progress",
+      "projectManager": "John Doe",
+      "description": "Complete redesign of the corporate website with modern UX and responsive layout.",
+      "startDate": "2026-01-05T00:00:00.000Z",
+      "endDate": "2026-03-15T00:00:00.000Z",
+      "billingType": "Fixed Price",
+      "budget": 45000,
+      "spent": 28500,
+      "progress": 65,
+      "requireTimesheets": true,
+      "clientTimesheetApproval": false,
+      "tags": [
+        "Website",
+        "Design",
+        "UI/UX"
+      ],
+      "_id": "2080dd0c101ad9654ec069d2",
+      "createdAt": "2026-01-05T11:00:00.000Z",
+      "updatedAt": "2026-01-05T11:00:00.000Z"
+    },
+    {
+      "name": "Mobile App Development",
+      "client": "Tech Startup Inc",
+      "status": "Planning",
+      "projectManager": "Jane Smith",
+      "description": "Cross-platform app for iOS and Android with push notifications and auth.",
+      "startDate": "2026-02-01T00:00:00.000Z",
+      "endDate": "2026-06-30T00:00:00.000Z",
+      "billingType": "Hourly",
+      "budget": 85000,
+      "spent": 5200,
+      "progress": 10,
+      "requireTimesheets": true,
+      "clientTimesheetApproval": true,
+      "tags": [
+        "Mobile",
+        "iOS",
+        "Android"
+      ],
+      "_id": "7e67250faf845f9ddeaad500",
+      "createdAt": "2026-02-01T11:00:00.000Z",
+      "updatedAt": "2026-02-01T11:00:00.000Z"
+    },
+    {
+      "name": "E-Commerce Platform",
+      "client": "Global Finance Ltd",
+      "status": "In Progress",
+      "projectManager": "John Doe",
+      "description": "Build product catalog, cart, checkout, and order management.",
+      "startDate": "2026-01-15T00:00:00.000Z",
+      "endDate": "2026-05-30T00:00:00.000Z",
+      "billingType": "Fixed Price",
+      "budget": 120000,
+      "spent": 45000,
+      "progress": 38,
+      "requireTimesheets": true,
+      "clientTimesheetApproval": true,
+      "tags": [
+        "E-Commerce",
+        "Web",
+        "Payments"
+      ],
+      "_id": "05639121be7f09afd23548e3",
+      "createdAt": "2026-01-15T11:00:00.000Z",
+      "updatedAt": "2026-01-15T11:00:00.000Z"
+    },
+    {
+      "name": "Brand Identity Package",
+      "client": "Creative Agency",
+      "status": "Completed",
+      "projectManager": "Sarah Wilson",
+      "description": "Logo, guidelines, stationery, and social templates.",
+      "startDate": "2025-12-01T00:00:00.000Z",
+      "endDate": "2026-01-15T00:00:00.000Z",
+      "billingType": "Fixed Price",
+      "budget": 15000,
+      "spent": 14800,
+      "progress": 100,
+      "requireTimesheets": false,
+      "clientTimesheetApproval": false,
+      "tags": [
+        "Branding",
+        "Design"
+      ],
+      "_id": "7112c59fc573661c4798140c",
+      "createdAt": "2025-12-01T11:00:00.000Z",
+      "updatedAt": "2025-12-01T11:00:00.000Z"
+    }
+  ],
+  "clients": [
+    {
+      "name": "Acme Corporation",
+      "email": "contact@acmecorp.com",
+      "company": "Acme Corporation",
+      "industry": "Technology",
+      "contact": "Jennifer Davis",
+      "status": "Active",
+      "_id": "37a02d779b66a4aea2a5a928",
+      "createdAt": "2026-01-02T09:00:00.000Z",
+      "updatedAt": "2026-01-02T09:00:00.000Z"
+    },
+    {
+      "name": "Tech Startup Inc",
+      "email": "hello@techstartup.com",
+      "company": "Tech Startup Inc",
+      "industry": "SaaS",
+      "contact": "Robert Chen",
+      "status": "Active",
+      "_id": "f47a42f8c2aa2d554695aba2",
+      "createdAt": "2026-01-03T09:00:00.000Z",
+      "updatedAt": "2026-01-03T09:00:00.000Z"
+    },
+    {
+      "name": "Global Finance Ltd",
+      "email": "admin@globalfinance.com",
+      "company": "Global Finance Ltd",
+      "industry": "Finance",
+      "contact": "David Park",
+      "status": "Inactive",
+      "_id": "a0ce6d33c0eb0b95a2a55564",
+      "createdAt": "2026-01-04T09:00:00.000Z",
+      "updatedAt": "2026-01-04T09:00:00.000Z"
+    },
+    {
+      "name": "Creative Agency",
+      "email": "team@creativeagency.com",
+      "company": "Creative Agency",
+      "industry": "Design",
+      "contact": "Emma Wilson",
+      "status": "Active",
+      "_id": "dc71d39560d44f1102a95cfa",
+      "createdAt": "2026-01-05T09:00:00.000Z",
+      "updatedAt": "2026-01-05T09:00:00.000Z"
+    }
+  ],
+  "deals": [
+    {
+      "name": "Acme Website Expansion",
+      "client": "Acme Corporation",
+      "value": 45000,
+      "stage": "Proposal",
+      "probability": 75,
+      "_id": "c1a14aa2a443b1493033c90e",
+      "createdAt": "2026-02-10T10:00:00.000Z",
+      "updatedAt": "2026-02-10T10:00:00.000Z"
+    },
+    {
+      "name": "TechStart SaaS Platform",
+      "client": "Tech Startup Inc",
+      "value": 85000,
+      "stage": "Qualified",
+      "probability": 40,
+      "_id": "27f997307b5e58f65973a4d5",
+      "createdAt": "2026-02-11T10:00:00.000Z",
+      "updatedAt": "2026-02-11T10:00:00.000Z"
+    },
+    {
+      "name": "Finance App Revamp",
+      "client": "Global Finance Ltd",
+      "value": 120000,
+      "stage": "Lead",
+      "probability": 20,
+      "_id": "16dc873f72fe1de0493bab77",
+      "createdAt": "2026-02-12T10:00:00.000Z",
+      "updatedAt": "2026-02-12T10:00:00.000Z"
+    },
+    {
+      "name": "Creative Brand Package",
+      "client": "Creative Agency",
+      "value": 15000,
+      "stage": "Closed Won",
+      "probability": 100,
+      "_id": "7cb8fb2e6e93121a533da5ab",
+      "createdAt": "2026-02-13T10:00:00.000Z",
+      "updatedAt": "2026-02-13T10:00:00.000Z"
+    }
+  ],
+  "contacts": [
+    {
+      "name": "Jennifer Davis",
+      "email": "jennifer@acme.com",
+      "phone": "+1 (555) 123-4567",
+      "company": "Acme Corporation",
+      "role": "CEO",
+      "status": "Active",
+      "_id": "49b440c3859ddacf78485baf",
+      "createdAt": "2026-02-01T09:00:00.000Z",
+      "updatedAt": "2026-02-01T09:00:00.000Z"
+    },
+    {
+      "name": "Robert Chen",
+      "email": "robert@techstart.io",
+      "phone": "+1 (555) 234-5678",
+      "company": "Tech Startup Inc",
+      "role": "CTO",
+      "status": "Active",
+      "_id": "b2b4f8a1070f0f1e84053654",
+      "createdAt": "2026-02-02T09:00:00.000Z",
+      "updatedAt": "2026-02-02T09:00:00.000Z"
+    },
+    {
+      "name": "David Park",
+      "email": "david@finance.com",
+      "phone": "+1 (555) 456-7890",
+      "company": "Global Finance Ltd",
+      "role": "VP Operations",
+      "status": "Inactive",
+      "_id": "c75aa06faf88de250c6abec6",
+      "createdAt": "2026-02-03T09:00:00.000Z",
+      "updatedAt": "2026-02-03T09:00:00.000Z"
+    },
+    {
+      "name": "Emma Wilson",
+      "email": "emma@creative.co",
+      "phone": "+1 (555) 567-8901",
+      "company": "Creative Agency",
+      "role": "Creative Director",
+      "status": "Active",
+      "_id": "e4c7e249ae2f7761a6ba260f",
+      "createdAt": "2026-02-04T09:00:00.000Z",
+      "updatedAt": "2026-02-04T09:00:00.000Z"
+    }
+  ],
+  "activities": [
+    {
+      "user": "Sales",
+      "action": "New deal created: Acme Website Expansion",
+      "color": "#6366F1",
+      "occurredAt": "2026-03-05T16:20:55.382Z",
+      "_id": "d827552070013751da238590",
+      "createdAt": "2026-03-05T16:20:55.382Z",
+      "updatedAt": "2026-03-05T16:20:55.382Z"
+    },
+    {
+      "user": "PM",
+      "action": "Project milestone completed: Website Redesign QA",
+      "color": "#16A34A",
+      "occurredAt": "2026-03-05T15:25:55.382Z",
+      "_id": "a18d43bc4d06f5a69598f579",
+      "createdAt": "2026-03-05T15:25:55.382Z",
+      "updatedAt": "2026-03-05T15:25:55.382Z"
+    },
+    {
+      "user": "Finance",
+      "action": "Invoice INV-2026-001 sent to client",
+      "color": "#F59E0B",
+      "occurredAt": "2026-03-05T14:25:55.382Z",
+      "_id": "ed36f158ab1d60e5d0bccf22",
+      "createdAt": "2026-03-05T14:25:55.382Z",
+      "updatedAt": "2026-03-05T14:25:55.382Z"
+    },
+    {
+      "user": "HR",
+      "action": "New talent profile added: Senior React Developer",
+      "color": "#EF4444",
+      "occurredAt": "2026-03-05T13:25:55.382Z",
+      "_id": "9bffbc8e816fd3ad806378be",
+      "createdAt": "2026-03-05T13:25:55.382Z",
+      "updatedAt": "2026-03-05T13:25:55.382Z"
+    }
+  ],
+  "approvals": [
+    {
+      "context": "dashboard",
+      "type": "Timesheet",
+      "title": "John Doe - Week 2",
+      "dueDate": "2026-03-04T18:30:00.000Z",
+      "status": "Pending",
+      "freelancer": "John Doe",
+      "project": "Website Redesign",
+      "week": "Week 2",
+      "hours": 42,
+      "amount": 3150,
+      "_id": "1ff3a6dc5a34421752455531",
+      "createdAt": "2026-03-04T18:30:00.000Z",
+      "updatedAt": "2026-03-04T18:30:00.000Z"
+    },
+    {
+      "context": "dashboard",
+      "type": "Invoice",
+      "title": "Client Invoice #1245",
+      "dueDate": "2026-03-05T18:30:00.000Z",
+      "status": "Pending",
+      "_id": "9fbcc2418b606cc40bd0a382",
+      "createdAt": "2026-03-04T18:30:00.000Z",
+      "updatedAt": "2026-03-04T18:30:00.000Z"
+    },
+    {
+      "context": "client-portal",
+      "type": "Timesheet",
+      "title": "Sarah Wilson - Jan 13 - 19",
+      "dueDate": "2026-03-05T18:30:00.000Z",
+      "status": "Pending",
+      "freelancer": "Sarah Wilson",
+      "project": "Website Redesign",
+      "week": "Jan 13 - 19, 2026",
+      "hours": 38,
+      "amount": 2850,
+      "_id": "aaca7c4b4991b910b480bd85",
+      "createdAt": "2026-03-04T18:30:00.000Z",
+      "updatedAt": "2026-03-04T18:30:00.000Z"
+    },
+    {
+      "context": "client-portal",
+      "type": "Leave",
+      "title": "Design Team PTO Request",
+      "dueDate": "2026-03-04T18:30:00.000Z",
+      "status": "Approved",
+      "_id": "70a3a358779740c0890c2058",
+      "createdAt": "2026-03-04T18:30:00.000Z",
+      "updatedAt": "2026-03-04T18:30:00.000Z"
+    }
+  ],
+  "freelancerData": [
+    {
+      "name": "Alex Thompson",
+      "role": "Senior Designer",
+      "weekStart": "2026-01-13T00:00:00.000Z",
+      "weekEnd": "2026-01-19T00:00:00.000Z",
+      "timesheetStatus": "Draft",
+      "rows": [
+        {
+          "project": "Website Redesign",
+          "task": "Frontend Development",
+          "hours": [
+            8,
+            7.5,
+            8,
+            6,
+            8,
+            4,
+            0
+          ]
+        },
+        {
+          "project": "Website Redesign",
+          "task": "Code Review",
+          "hours": [
+            0,
+            0.5,
+            0,
+            2,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "project": "Mobile App Development",
+          "task": "API Integration",
+          "hours": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            2,
+            0
+          ]
+        }
+      ],
+      "_id": "e11c197979af8c86c350e40b",
+      "createdAt": "2026-01-13T08:00:00.000Z",
+      "updatedAt": "2026-01-13T08:00:00.000Z"
+    }
+  ],
+  "invoices": [
+    {
+      "invoiceNumber": "INV-2026-001",
+      "client": "Acme Corporation",
+      "project": "Website Redesign",
+      "amount": 28500,
+      "date": "2026-03-01T00:00:00.000Z",
+      "dueDate": "2026-03-15T00:00:00.000Z",
+      "status": "Pending",
+      "_id": "116ce636ea8b286c7dc55ed9",
+      "createdAt": "2026-03-01T08:00:00.000Z",
+      "updatedAt": "2026-03-01T08:00:00.000Z"
+    },
+    {
+      "invoiceNumber": "INV-2026-002",
+      "client": "Global Finance Ltd",
+      "project": "E-Commerce Platform",
+      "amount": 15200,
+      "date": "2026-02-28T00:00:00.000Z",
+      "dueDate": "2026-03-14T00:00:00.000Z",
+      "status": "Paid",
+      "_id": "b0735626aa7124f308de41de",
+      "createdAt": "2026-02-28T08:00:00.000Z",
+      "updatedAt": "2026-02-28T08:00:00.000Z"
+    },
+    {
+      "invoiceNumber": "INV-2026-003",
+      "client": "Tech Startup Inc",
+      "project": "Mobile App Development",
+      "amount": 42000,
+      "date": "2026-02-25T00:00:00.000Z",
+      "dueDate": "2026-03-10T00:00:00.000Z",
+      "status": "Overdue",
+      "_id": "577110180970e7e811587df9",
+      "createdAt": "2026-02-25T08:00:00.000Z",
+      "updatedAt": "2026-02-25T08:00:00.000Z"
+    },
+    {
+      "invoiceNumber": "INV-2025-011",
+      "client": "Creative Agency",
+      "project": "Brand Identity Package",
+      "amount": 18750,
+      "date": "2026-02-20T00:00:00.000Z",
+      "dueDate": "2026-03-05T00:00:00.000Z",
+      "status": "Paid",
+      "_id": "4d2386d03ba2961e14721722",
+      "createdAt": "2026-02-20T08:00:00.000Z",
+      "updatedAt": "2026-02-20T08:00:00.000Z"
+    }
+  ],
+  "forms": [
+    {
+      "name": "Client Onboarding Form",
+      "type": "Intake",
+      "submissions": 24,
+      "status": "Active",
+      "completion": 85,
+      "lastSubmission": "2026-03-05T00:00:00.000Z",
+      "_id": "1a86f47d49700d84953c1cc9",
+      "createdAt": "2026-03-05T08:00:00.000Z",
+      "updatedAt": "2026-03-05T08:00:00.000Z"
+    },
+    {
+      "name": "Project Brief Template",
+      "type": "Brief",
+      "submissions": 18,
+      "status": "Active",
+      "completion": 92,
+      "lastSubmission": "2026-03-04T00:00:00.000Z",
+      "_id": "c8c49a9c4c8dee43b9b6b104",
+      "createdAt": "2026-03-04T08:00:00.000Z",
+      "updatedAt": "2026-03-04T08:00:00.000Z"
+    },
+    {
+      "name": "Feedback Survey",
+      "type": "Survey",
+      "submissions": 12,
+      "status": "Active",
+      "completion": 65,
+      "lastSubmission": "2026-03-02T00:00:00.000Z",
+      "_id": "586d7d29421cd1700267a1d7",
+      "createdAt": "2026-03-02T08:00:00.000Z",
+      "updatedAt": "2026-03-02T08:00:00.000Z"
+    },
+    {
+      "name": "Q1 Performance Review",
+      "type": "Review",
+      "submissions": 8,
+      "status": "Draft",
+      "completion": 40,
+      "lastSubmission": null,
+      "_id": "1aa09615075bddf2be5654e8",
+      "createdAt": "2026-02-28T08:00:00.000Z",
+      "updatedAt": "2026-02-28T08:00:00.000Z"
+    }
+  ],
+  "people": [
+    {
+      "name": "John Doe",
+      "email": "john@atcon.com",
+      "department": "Engineering",
+      "role": "Senior Developer",
+      "type": "Employee",
+      "status": "Active",
+      "joinDate": "2024-01-15T00:00:00.000Z",
+      "color": "#3B82F6",
+      "_id": "085cd4951065b0957b00abfc",
+      "createdAt": "2024-01-15T09:00:00.000Z",
+      "updatedAt": "2024-01-15T09:00:00.000Z"
+    },
+    {
+      "name": "Sarah Johnson",
+      "email": "sarah@atcon.com",
+      "department": "Design",
+      "role": "Lead Designer",
+      "type": "Contractor",
+      "status": "Active",
+      "joinDate": "2024-03-01T00:00:00.000Z",
+      "color": "#EC4899",
+      "_id": "f098696d22167b4c4c7306b1",
+      "createdAt": "2024-03-01T09:00:00.000Z",
+      "updatedAt": "2024-03-01T09:00:00.000Z"
+    },
+    {
+      "name": "Emily Rodriguez",
+      "email": "emily@atcon.com",
+      "department": "Marketing",
+      "role": "Marketing Manager",
+      "type": "Employee",
+      "status": "On Leave",
+      "joinDate": "2024-02-01T00:00:00.000Z",
+      "color": "#10B981",
+      "_id": "8b6bfec4b9c82f9d549c9306",
+      "createdAt": "2024-02-01T09:00:00.000Z",
+      "updatedAt": "2024-02-01T09:00:00.000Z"
+    },
+    {
+      "name": "Lisa Patel",
+      "email": "lisa@atcon.com",
+      "department": "Finance",
+      "role": "Financial Analyst",
+      "type": "Employee",
+      "status": "Active",
+      "joinDate": "2024-11-01T00:00:00.000Z",
+      "color": "#6366F1",
+      "_id": "bf30a59b1a48d94bffed6080",
+      "createdAt": "2024-11-01T09:00:00.000Z",
+      "updatedAt": "2024-11-01T09:00:00.000Z"
+    }
+  ],
+  "supportTickets": [
+    {
+      "ticketId": "TK-001",
+      "title": "Access issue with project files",
+      "client": "Acme Corporation",
+      "priority": "High",
+      "status": "Open",
+      "assignee": "John Doe",
+      "_id": "fcb0bdb4007dd7c6d41f7467",
+      "createdAt": "2026-02-24T08:00:00.000Z",
+      "updatedAt": "2026-02-24T08:00:00.000Z"
+    },
+    {
+      "ticketId": "TK-002",
+      "title": "Invoice discrepancy for January",
+      "client": "Global Finance Ltd",
+      "priority": "Medium",
+      "status": "In Progress",
+      "assignee": "Lisa Patel",
+      "_id": "b67a6ca3461c5fe2f791cdb6",
+      "createdAt": "2026-02-25T08:00:00.000Z",
+      "updatedAt": "2026-02-25T08:00:00.000Z"
+    },
+    {
+      "ticketId": "TK-003",
+      "title": "Deployment failure on staging",
+      "client": "Tech Startup Inc",
+      "priority": "High",
+      "status": "Open",
+      "assignee": "David Kim",
+      "_id": "c50533f54cdb03bffc5a6d96",
+      "createdAt": "2026-02-26T08:00:00.000Z",
+      "updatedAt": "2026-02-26T08:00:00.000Z"
+    },
+    {
+      "ticketId": "TK-004",
+      "title": "Design feedback pending review",
+      "client": "Creative Agency",
+      "priority": "Low",
+      "status": "Resolved",
+      "assignee": "Emily Rodriguez",
+      "_id": "68e2f2a98aa17b4f41331fe9",
+      "createdAt": "2026-02-27T08:00:00.000Z",
+      "updatedAt": "2026-02-27T08:00:00.000Z"
+    }
+  ],
+  "talent": [
+    {
+      "name": "Sarah Johnson",
+      "role": "Senior React Developer",
+      "skills": [
+        "React",
+        "TypeScript",
+        "Node.js"
+      ],
+      "experience": "8 years",
+      "rate": "$95/hr",
+      "availability": "Available",
+      "rating": 4.9,
+      "color": "#6366F1",
+      "_id": "e2b2f61fffbfb2a5a0bd9288",
+      "createdAt": "2026-02-01T08:00:00.000Z",
+      "updatedAt": "2026-02-01T08:00:00.000Z"
+    },
+    {
+      "name": "Mike Chen",
+      "role": "Full Stack Developer",
+      "skills": [
+        "Python",
+        "Django",
+        "React"
+      ],
+      "experience": "6 years",
+      "rate": "$85/hr",
+      "availability": "Available",
+      "rating": 4.7,
+      "color": "#F59E0B",
+      "_id": "f0f014423446fa3142a24bd8",
+      "createdAt": "2026-02-02T08:00:00.000Z",
+      "updatedAt": "2026-02-02T08:00:00.000Z"
+    },
+    {
+      "name": "Emily Rodriguez",
+      "role": "UI/UX Designer",
+      "skills": [
+        "Figma",
+        "Sketch",
+        "Adobe XD"
+      ],
+      "experience": "5 years",
+      "rate": "$80/hr",
+      "availability": "On Project",
+      "rating": 4.8,
+      "color": "#EC4899",
+      "_id": "3a28c4004f24f54001a944ff",
+      "createdAt": "2026-02-03T08:00:00.000Z",
+      "updatedAt": "2026-02-03T08:00:00.000Z"
+    },
+    {
+      "name": "David Kim",
+      "role": "DevOps Engineer",
+      "skills": [
+        "AWS",
+        "Docker",
+        "Kubernetes"
+      ],
+      "experience": "7 years",
+      "rate": "$100/hr",
+      "availability": "Available",
+      "rating": 4.6,
+      "color": "#10B981",
+      "_id": "45c38bcdfb0dd0c7876b9d3b",
+      "createdAt": "2026-02-04T08:00:00.000Z",
+      "updatedAt": "2026-02-04T08:00:00.000Z"
+    }
+  ]
 }
