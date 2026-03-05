@@ -12,7 +12,6 @@ import {
     ListItemIcon,
     ListItemText,
     Typography,
-    Avatar,
     Divider,
 } from '@mui/material';
 import {
@@ -24,6 +23,12 @@ import {
     EventNote as LeaveIcon,
     Description as DocumentsIcon,
     WorkOutline as AssignmentsIcon,
+    Article as ProposalsIcon,
+    CheckCircleOutline as ApprovalsIcon,
+    Receipt as InvoicesIcon,
+    Groups as MeetingsIcon,
+    SupportAgent as SupportIcon,
+    DynamicForm as FormsIcon,
 } from '@mui/icons-material';
 
 const PORTAL_SIDEBAR_WIDTH = 220;
@@ -53,36 +58,63 @@ const freelancerNavItems: NavItem[] = [
     { label: 'My Documents', icon: <DocumentsIcon />, path: '/freelancer/documents' },
 ];
 
+const clientNavItems: NavItem[] = [
+    { label: 'Home', icon: <HomeIcon />, path: '/client-portal' },
+    { label: 'Projects', icon: <ProjectsIcon />, path: '/client-portal/projects' },
+    { label: 'Proposals', icon: <ProposalsIcon />, path: '/client-portal/proposals' },
+    { label: 'Approvals', icon: <ApprovalsIcon />, path: '/client-portal/approvals' },
+    { label: 'Invoices', icon: <InvoicesIcon />, path: '/client-portal/invoices' },
+    { label: 'Documents', icon: <DocumentsIcon />, path: '/client-portal/documents' },
+    { label: 'Meetings', icon: <MeetingsIcon />, path: '/client-portal/meetings' },
+    { label: 'Support', icon: <SupportIcon />, path: '/client-portal/support' },
+    { label: 'Forms', icon: <FormsIcon />, path: '/client-portal/forms' },
+];
+
 const themes = {
     employee: {
         gradient: 'linear-gradient(180deg, #1E40AF 0%, #2563EB 100%)',
         activeBackground: 'rgba(255, 255, 255, 0.2)',
         hoverBackground: 'rgba(255, 255, 255, 0.1)',
         portalLabel: 'Employee Portal',
-        userName: 'John Doe',
-        avatarBg: '#3B82F6',
+        subLabel: 'John Doe',
     },
     freelancer: {
         gradient: 'linear-gradient(180deg, #166534 0%, #16A34A 100%)',
         activeBackground: 'rgba(255, 255, 255, 0.2)',
         hoverBackground: 'rgba(255, 255, 255, 0.1)',
         portalLabel: 'Freelancer Portal',
-        userName: 'Sarah Johnson',
-        avatarBg: '#22C55E',
+        subLabel: 'Sarah Johnson',
+    },
+    client: {
+        gradient: 'linear-gradient(180deg, #312E81 0%, #4F46E5 100%)',
+        activeBackground: 'rgba(255, 255, 255, 0.2)',
+        hoverBackground: 'rgba(255, 255, 255, 0.1)',
+        portalLabel: 'Client Portal',
+        subLabel: 'Acme Corporation',
     },
 };
 
+const navItemsMap = {
+    employee: employeeNavItems,
+    freelancer: freelancerNavItems,
+    client: clientNavItems,
+};
+
+const homeRoutes = ['/employee', '/freelancer', '/client-portal'];
+
 interface PortalSidebarProps {
-    portalType: 'employee' | 'freelancer';
+    portalType: 'employee' | 'freelancer' | 'client';
+    subLabel?: string;
 }
 
-export default function PortalSidebar({ portalType }: PortalSidebarProps) {
+export default function PortalSidebar({ portalType, subLabel }: PortalSidebarProps) {
     const pathname = usePathname();
     const theme = themes[portalType];
-    const navItems = portalType === 'employee' ? employeeNavItems : freelancerNavItems;
+    const navItems = navItemsMap[portalType];
+    const displaySubLabel = subLabel || theme.subLabel;
 
     const isActive = (path: string) => {
-        if (path === '/employee' || path === '/freelancer') {
+        if (homeRoutes.includes(path)) {
             return pathname === path;
         }
         return pathname?.startsWith(path);
@@ -123,7 +155,7 @@ export default function PortalSidebar({ portalType }: PortalSidebarProps) {
                         fontSize: '0.75rem',
                     }}
                 >
-                    {theme.userName}
+                    {displaySubLabel}
                 </Typography>
             </Box>
 

@@ -12,7 +12,7 @@ import Header from '@/components/layout/Header';
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const isAuthRoute = pathname === '/login' || pathname === '/signup';
-    const isPortalRoute = pathname?.startsWith('/employee') || pathname?.startsWith('/freelancer');
+    const isPortalRoute = pathname?.startsWith('/employee') || pathname?.startsWith('/freelancer') || pathname?.startsWith('/client-portal');
 
     return (
         <ReduxProvider>

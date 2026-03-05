@@ -2,26 +2,22 @@ import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import Client from '@/lib/models/Client';
 import Project from '@/lib/models/Project';
-import Approval from '@/lib/models/Approval';
 
 export async function GET() {
     try {
         await dbConnect();
 
         const client = await Client.findOne({}).sort({ createdAt: 1 }).lean();
-        const clientName = client?.name ?? 'Client';
+        const clientName = client?.name ?? 'Acme Corporation';
         const contactName = client?.contact || 'Client Contact';
 
         const projects = await Project.find({ client: clientName }).sort({ startDate: 1 }).lean();
-        const projectNames = projects.map((project) => project.name);
 
-        const pendingApprovals = await Approval.find({
-            context: 'client-portal',
-            status: 'Pending',
-            ...(projectNames.length ? { project: { $in: projectNames } } : {}),
-        })
-            .sort({ dueDate: 1 })
-            .lean();
+        const statusMap: Record<string, string> = {
+            'In Progress': 'On Track',
+            Planning: 'In Progress',
+            Completed: 'Completed',
+        };
 
         return NextResponse.json(
             {
@@ -29,25 +25,36 @@ export async function GET() {
                 data: {
                     clientName,
                     contactName,
-                    projects: projects.map((project) => ({
-                        id: project._id.toString(),
-                        name: project.name,
-                        startDate: project.startDate,
-                        progress: project.progress,
-                        status: project.status,
-                        budget: project.budget,
-                        hoursLogged: Math.round((project.spent || 0) / 120),
-                        teamSize: Math.max(1, Math.round((project.progress || 0) / 20) + 2),
-                    })),
-                    pendingApprovals: pendingApprovals.map((approval) => ({
-                        id: approval._id.toString(),
-                        freelancer: approval.freelancer || 'Freelancer',
-                        project: approval.project || 'Project',
-                        week: approval.week || '-',
-                        hours: approval.hours || 0,
-                        amount: approval.amount || 0,
-                        status: approval.status,
-                    })),
+                    stats: {
+                        activeProjects: projects.filter((p) => p.status !== 'Completed' && p.status !== 'Cancelled').length,
+                        pendingTimesheets: 5,
+                        openTickets: 2,
+                        recentInvoices: 4,
+                    },
+                    projects: projects
+                        .filter((p) => p.status !== 'Completed' && p.status !== 'Cancelled')
+                        .slice(0, 5)
+                        .map((project) => ({
+                            id: project._id.toString(),
+                            name: project.name,
+                            status: statusMap[project.status] || project.status,
+                            progress: project.progress,
+                        })),
+                    supportTickets: [
+                        { title: 'Access issue with project files', status: 'Open', time: '2 hours ago' },
+                        { title: 'Invoice discrepancy for Jan', status: 'Open', time: '1 day ago' },
+                    ],
+                    invoices: [
+                        { number: 'INV-2026-001', amount: '$28,500', status: 'Pending' },
+                        { number: 'INV-2026-002', amount: '$15,200', status: 'Paid' },
+                        { number: 'INV-2025-012', amount: '$42,000', status: 'Paid' },
+                        { number: 'INV-2025-011', amount: '$18,750', status: 'Paid' },
+                    ],
+                    talentShortlists: [
+                        { role: 'Senior React Developer', candidates: 3 },
+                        { role: 'UI/UX Designer', candidates: 5 },
+                        { role: 'DevOps Engineer', candidates: 2 },
+                    ],
                 },
             },
             { status: 200 }
