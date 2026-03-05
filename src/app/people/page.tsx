@@ -1,142 +1,94 @@
 'use client';
-
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
-    Box, Typography, Card, Avatar, Chip, Button, InputBase, IconButton,
+    Box, Typography, Card, Chip, Avatar, TextField, InputAdornment, Button, Tabs, Tab,
     Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper,
-    Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem, Tabs, Tab,
+    Dialog, DialogTitle, DialogContent, DialogActions, CircularProgress, Snackbar, Alert, MenuItem,
 } from '@mui/material';
-import { Search as SearchIcon, Add as AddIcon, MoreVert as MoreIcon } from '@mui/icons-material';
+import { Search as SearchIcon, Add as AddIcon } from '@mui/icons-material';
 
-interface Person {
-    name: string;
-    email: string;
-    department: string;
-    role: string;
-    type: 'Employee' | 'Contractor';
-    status: 'Active' | 'On Leave' | 'Offboarded';
-    joinDate: string;
-    avatar: string;
-    color: string;
-}
+interface Person { _id: string; name: string; email: string; department: string; role: string; type: string; status: string; joinDate: string; color: string; }
 
-const initialPeople: Person[] = [
-    { name: 'John Doe', email: 'john@atcon.com', department: 'Engineering', role: 'Senior Developer', type: 'Employee', status: 'Active', joinDate: 'Jan 2024', avatar: 'JD', color: '#3B82F6' },
-    { name: 'Sarah Johnson', email: 'sarah@atcon.com', department: 'Design', role: 'Lead Designer', type: 'Contractor', status: 'Active', joinDate: 'Mar 2024', avatar: 'SJ', color: '#EC4899' },
-    { name: 'Mike Chen', email: 'mike@atcon.com', department: 'Engineering', role: 'Backend Developer', type: 'Employee', status: 'Active', joinDate: 'Jun 2024', avatar: 'MC', color: '#F59E0B' },
-    { name: 'Emily Rodriguez', email: 'emily@atcon.com', department: 'Marketing', role: 'Marketing Manager', type: 'Employee', status: 'On Leave', joinDate: 'Feb 2024', avatar: 'ER', color: '#10B981' },
-    { name: 'David Kim', email: 'david@atcon.com', department: 'Operations', role: 'DevOps Lead', type: 'Employee', status: 'Active', joinDate: 'Aug 2023', avatar: 'DK', color: '#8B5CF6' },
-    { name: 'Lisa Patel', email: 'lisa@atcon.com', department: 'Finance', role: 'Financial Analyst', type: 'Employee', status: 'Active', joinDate: 'Nov 2024', avatar: 'LP', color: '#6366F1' },
-    { name: 'James Wilson', email: 'james@atcon.com', department: 'Engineering', role: 'Mobile Developer', type: 'Contractor', status: 'Active', joinDate: 'Sep 2024', avatar: 'JW', color: '#EF4444' },
-];
-
-const statusStyles: Record<string, { bg: string; text: string }> = {
-    Active: { bg: '#DCFCE7', text: '#16A34A' },
-    'On Leave': { bg: '#FEF3C7', text: '#D97706' },
-    Offboarded: { bg: '#F1F5F9', text: '#64748B' },
-};
+const st: Record<string, { bg: string; text: string }> = { Active: { bg: '#DCFCE7', text: '#16A34A' }, 'On Leave': { bg: '#FEF3C7', text: '#D97706' }, Offboarded: { bg: '#FEE2E2', text: '#EF4444' } };
 
 export default function PeoplePage() {
-    const [people, setPeople] = useState(initialPeople);
+    const [people, setPeople] = useState<Person[]>([]);
+    const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
     const [tab, setTab] = useState(0);
-    const [dialogOpen, setDialogOpen] = useState(false);
-    const [form, setForm] = useState({ name: '', email: '', department: '', role: '', type: 'Employee' as const, status: 'Active' as const });
+    const [open, setOpen] = useState(false);
+    const [form, setForm] = useState({ name: '', email: '', department: '', role: '', type: 'Employee' });
+    const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
 
-    const filtered = people.filter((p) => {
-        const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase()) || p.department.toLowerCase().includes(search.toLowerCase());
-        if (tab === 1) return matchesSearch && p.type === 'Employee';
-        if (tab === 2) return matchesSearch && p.type === 'Contractor';
-        return matchesSearch;
-    });
+    const fetchPeople = useCallback(async () => {
+        try { setLoading(true); const res = await fetch('/api/people'); const json = await res.json(); if (json.success) setPeople(json.data); }
+        catch { setSnackbar({ open: true, message: 'Failed to load people', severity: 'error' }); }
+        finally { setLoading(false); }
+    }, []);
 
-    const handleAdd = () => {
+    useEffect(() => { fetchPeople(); }, [fetchPeople]);
+
+    const handleCreate = async () => {
         if (!form.name || !form.email) return;
-        const colors = ['#6366F1', '#3B82F6', '#EC4899', '#10B981', '#F59E0B'];
-        setPeople((prev) => [...prev, { ...form, joinDate: 'Mar 2026', avatar: form.name.split(' ').map((n) => n[0]).join(''), color: colors[Math.floor(Math.random() * colors.length)] }]);
-        setForm({ name: '', email: '', department: '', role: '', type: 'Employee', status: 'Active' });
-        setDialogOpen(false);
+        try {
+            const res = await fetch('/api/people', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) });
+            const json = await res.json();
+            if (json.success) { setOpen(false); setForm({ name: '', email: '', department: '', role: '', type: 'Employee' }); fetchPeople(); setSnackbar({ open: true, message: 'Person added', severity: 'success' }); }
+        } catch { setSnackbar({ open: true, message: 'Failed to add person', severity: 'error' }); }
     };
 
+    const filtered = people.filter((p) => {
+        const matchesSearch = !search || p.name.toLowerCase().includes(search.toLowerCase()) || p.email.toLowerCase().includes(search.toLowerCase());
+        const matchesTab = tab === 0 || (tab === 1 && p.type === 'Employee') || (tab === 2 && p.type === 'Contractor');
+        return matchesSearch && matchesTab;
+    });
+    const counts = { all: people.length, employees: people.filter((p) => p.type === 'Employee').length, contractors: people.filter((p) => p.type === 'Contractor').length };
+
+    if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}><CircularProgress /></Box>;
+
     return (
-        <Box sx={{ px: 3.5, py: 3 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                <Box>
-                    <Typography variant="h4" sx={{ fontWeight: 700, color: '#1E293B', fontSize: '1.5rem' }}>People</Typography>
-                    <Typography variant="body2" sx={{ color: '#64748B' }}>{people.length} team members</Typography>
-                </Box>
-                <Button variant="contained" startIcon={<AddIcon />} onClick={() => setDialogOpen(true)} sx={{ bgcolor: '#3B82F6', borderRadius: '10px', textTransform: 'none', fontWeight: 600, '&:hover': { bgcolor: '#2563EB' } }}>
-                    Add Person
-                </Button>
+        <Box>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
+                <Box><Typography variant="h4" sx={{ fontWeight: 700, color: '#1E293B', fontSize: '1.5rem', mb: 0.5 }}>People</Typography><Typography variant="body2" sx={{ color: '#64748B' }}>{counts.all} team members</Typography></Box>
+                <Button variant="contained" startIcon={<AddIcon />} onClick={() => setOpen(true)} sx={{ bgcolor: '#2563EB', '&:hover': { bgcolor: '#1D4ED8' }, borderRadius: '10px', textTransform: 'none', fontWeight: 600 }}>Add Person</Button>
             </Box>
-
-            <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
-                <Paper sx={{ display: 'flex', alignItems: 'center', px: 2, py: 0.5, borderRadius: '10px', border: '1px solid #E2E8F0', flex: 1, boxShadow: 'none' }}>
-                    <SearchIcon sx={{ color: '#94A3B8', mr: 1 }} />
-                    <InputBase placeholder="Search people..." value={search} onChange={(e) => setSearch(e.target.value)} sx={{ flex: 1, fontSize: '0.9rem' }} />
-                </Paper>
-            </Box>
-
-            <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 3, '& .MuiTab-root': { textTransform: 'none', fontWeight: 500, fontSize: '0.85rem' }, '& .Mui-selected': { color: '#3B82F6 !important' }, '& .MuiTabs-indicator': { bgcolor: '#3B82F6' } }}>
-                <Tab label={`All (${people.length})`} />
-                <Tab label={`Employees (${people.filter((p) => p.type === 'Employee').length})`} />
-                <Tab label={`Contractors (${people.filter((p) => p.type === 'Contractor').length})`} />
+            <TextField fullWidth placeholder="Search people..." value={search} onChange={(e) => setSearch(e.target.value)} InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon sx={{ color: '#94A3B8' }} /></InputAdornment> }} sx={{ mb: 2, '& .MuiOutlinedInput-root': { borderRadius: '12px', bgcolor: '#fff', '& fieldset': { borderColor: '#E2E8F0' } } }} />
+            <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 3, '& .MuiTab-root': { textTransform: 'none', fontWeight: 600, fontSize: '0.85rem' }, '& .Mui-selected': { color: '#2563EB' }, '& .MuiTabs-indicator': { backgroundColor: '#2563EB' } }}>
+                <Tab label={`All (${counts.all})`} /><Tab label={`Employees (${counts.employees})`} /><Tab label={`Contractors (${counts.contractors})`} />
             </Tabs>
-
             <Paper sx={{ borderRadius: '14px', overflow: 'hidden', border: '1px solid #E2E8F0', boxShadow: 'none' }}>
-                <TableContainer>
-                    <Table>
-                        <TableHead>
-                            <TableRow sx={{ bgcolor: '#F8FAFC' }}>
-                                <TableCell sx={{ fontWeight: 600, color: '#64748B', fontSize: '0.78rem' }}>Name</TableCell>
-                                <TableCell sx={{ fontWeight: 600, color: '#64748B', fontSize: '0.78rem' }}>Department</TableCell>
-                                <TableCell sx={{ fontWeight: 600, color: '#64748B', fontSize: '0.78rem' }}>Role</TableCell>
-                                <TableCell sx={{ fontWeight: 600, color: '#64748B', fontSize: '0.78rem' }}>Type</TableCell>
-                                <TableCell sx={{ fontWeight: 600, color: '#64748B', fontSize: '0.78rem' }}>Status</TableCell>
-                                <TableCell sx={{ fontWeight: 600, color: '#64748B', fontSize: '0.78rem' }}>Joined</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {filtered.map((person, i) => (
-                                <TableRow key={i} hover sx={{ '&:hover': { bgcolor: '#FAFAFA' } }}>
-                                    <TableCell>
-                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                                            <Avatar sx={{ bgcolor: person.color, width: 34, height: 34, fontSize: '0.75rem', fontWeight: 600 }}>{person.avatar}</Avatar>
-                                            <Box>
-                                                <Typography variant="body2" sx={{ fontWeight: 600, color: '#1E293B', fontSize: '0.85rem' }}>{person.name}</Typography>
-                                                <Typography variant="caption" sx={{ color: '#94A3B8', fontSize: '0.72rem' }}>{person.email}</Typography>
-                                            </Box>
-                                        </Box>
-                                    </TableCell>
-                                    <TableCell sx={{ fontSize: '0.82rem', color: '#475569' }}>{person.department}</TableCell>
-                                    <TableCell sx={{ fontSize: '0.82rem', color: '#475569' }}>{person.role}</TableCell>
-                                    <TableCell><Chip label={person.type} size="small" sx={{ bgcolor: person.type === 'Employee' ? '#EFF6FF' : '#FEF3C7', color: person.type === 'Employee' ? '#2563EB' : '#D97706', fontWeight: 600, fontSize: '0.68rem', height: 22 }} /></TableCell>
-                                    <TableCell><Chip label={person.status} size="small" sx={{ bgcolor: statusStyles[person.status].bg, color: statusStyles[person.status].text, fontWeight: 600, fontSize: '0.68rem', height: 22 }} /></TableCell>
-                                    <TableCell sx={{ fontSize: '0.82rem', color: '#94A3B8' }}>{person.joinDate}</TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
+                <TableContainer><Table>
+                    <TableHead><TableRow sx={{ bgcolor: '#F8FAFC' }}>
+                        {['Name', 'Department', 'Role', 'Type', 'Status'].map((h) => <TableCell key={h} sx={{ fontWeight: 600, color: '#64748B', fontSize: '0.78rem', textTransform: 'uppercase' }}>{h}</TableCell>)}
+                    </TableRow></TableHead>
+                    <TableBody>{filtered.map((p) => (
+                        <TableRow key={p._id} hover>
+                            <TableCell><Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}><Avatar sx={{ bgcolor: p.color, width: 32, height: 32, fontSize: '0.75rem', fontWeight: 600 }}>{p.name.split(' ').map((n) => n[0]).join('')}</Avatar><Box><Typography variant="body2" sx={{ fontWeight: 500 }}>{p.name}</Typography><Typography variant="caption" sx={{ color: '#94A3B8' }}>{p.email}</Typography></Box></Box></TableCell>
+                            <TableCell sx={{ color: '#475569', fontSize: '0.82rem' }}>{p.department}</TableCell>
+                            <TableCell sx={{ color: '#475569', fontSize: '0.82rem' }}>{p.role}</TableCell>
+                            <TableCell><Chip label={p.type} size="small" sx={{ bgcolor: p.type === 'Employee' ? '#DBEAFE' : '#EDE9FE', color: p.type === 'Employee' ? '#2563EB' : '#7C3AED', fontWeight: 600, fontSize: '0.68rem', height: 22 }} /></TableCell>
+                            <TableCell><Chip label={p.status} size="small" sx={{ bgcolor: (st[p.status] || st['Active']).bg, color: (st[p.status] || st['Active']).text, fontWeight: 600, fontSize: '0.68rem', height: 22 }} /></TableCell>
+                        </TableRow>
+                    ))}</TableBody>
+                </Table></TableContainer>
             </Paper>
-
-            <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: '16px' } }}>
+            <Dialog open={open} onClose={() => setOpen(false)} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: '16px' } }}>
                 <DialogTitle sx={{ fontWeight: 700 }}>Add Person</DialogTitle>
                 <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: '8px !important' }}>
-                    <TextField label="Full Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required size="small" />
-                    <TextField label="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required size="small" />
-                    <TextField label="Department" value={form.department} onChange={(e) => setForm({ ...form, department: e.target.value })} size="small" />
-                    <TextField label="Role" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} size="small" />
-                    <TextField select label="Type" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value as 'Employee' | 'Contractor' })} size="small">
-                        <MenuItem value="Employee">Employee</MenuItem>
-                        <MenuItem value="Contractor">Contractor</MenuItem>
+                    <TextField label="Name" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} required fullWidth />
+                    <TextField label="Email" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} required fullWidth />
+                    <TextField label="Department" value={form.department} onChange={(e) => setForm((f) => ({ ...f, department: e.target.value }))} fullWidth />
+                    <TextField label="Role" value={form.role} onChange={(e) => setForm((f) => ({ ...f, role: e.target.value }))} fullWidth />
+                    <TextField select label="Type" value={form.type} onChange={(e) => setForm((f) => ({ ...f, type: e.target.value }))} fullWidth>
+                        <MenuItem value="Employee">Employee</MenuItem><MenuItem value="Contractor">Contractor</MenuItem>
                     </TextField>
                 </DialogContent>
-                <DialogActions sx={{ px: 3, pb: 2 }}>
-                    <Button onClick={() => setDialogOpen(false)} sx={{ color: '#64748B' }}>Cancel</Button>
-                    <Button variant="contained" onClick={handleAdd} sx={{ bgcolor: '#3B82F6', '&:hover': { bgcolor: '#2563EB' } }}>Add</Button>
+                <DialogActions sx={{ p: 2.5 }}>
+                    <Button onClick={() => setOpen(false)} sx={{ textTransform: 'none' }}>Cancel</Button>
+                    <Button variant="contained" onClick={handleCreate} sx={{ bgcolor: '#2563EB', '&:hover': { bgcolor: '#1D4ED8' }, textTransform: 'none', borderRadius: '10px' }}>Add</Button>
                 </DialogActions>
             </Dialog>
+            <Snackbar open={snackbar.open} autoHideDuration={3000} onClose={() => setSnackbar((s) => ({ ...s, open: false }))} anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}><Alert severity={snackbar.severity} variant="filled">{snackbar.message}</Alert></Snackbar>
         </Box>
     );
 }

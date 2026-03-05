@@ -1,137 +1,103 @@
 'use client';
-
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
-    Box, Typography, Card, Avatar, Chip, Grid, Button, InputBase, IconButton,
-    Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper,
-    Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem,
-    Tabs, Tab, LinearProgress,
+    Box, Typography, Card, Grid, Chip, Avatar, TextField, InputAdornment, Button, Tabs, Tab,
+    Dialog, DialogTitle, DialogContent, DialogActions, CircularProgress, Snackbar, Alert,
 } from '@mui/material';
-import {
-    Search as SearchIcon, Add as AddIcon, Star as StarIcon,
-    WorkOutline as WorkIcon, FilterList as FilterIcon,
-} from '@mui/icons-material';
+import { Search as SearchIcon, Add as AddIcon, Star as StarIcon } from '@mui/icons-material';
 
-interface TalentPerson {
-    name: string;
-    role: string;
-    skills: string[];
-    experience: string;
-    rate: string;
-    availability: string;
-    rating: number;
-    avatar: string;
-    color: string;
+interface Talent {
+    _id: string; name: string; role: string; skills: string[]; experience: string;
+    rate: string; availability: string; rating: number; color: string;
 }
 
-const initialTalent: TalentPerson[] = [
-    { name: 'Sarah Johnson', role: 'Senior React Developer', skills: ['React', 'TypeScript', 'Node.js'], experience: '8 years', rate: '$95/hr', availability: 'Available', rating: 4.9, avatar: 'SJ', color: '#6366F1' },
-    { name: 'Mike Chen', role: 'Full Stack Developer', skills: ['Python', 'Django', 'React'], experience: '6 years', rate: '$85/hr', availability: 'Available', rating: 4.7, avatar: 'MC', color: '#F59E0B' },
-    { name: 'Emily Rodriguez', role: 'UI/UX Designer', skills: ['Figma', 'Sketch', 'Adobe XD'], experience: '5 years', rate: '$80/hr', availability: 'On Project', rating: 4.8, avatar: 'ER', color: '#EC4899' },
-    { name: 'David Kim', role: 'DevOps Engineer', skills: ['AWS', 'Docker', 'Kubernetes'], experience: '7 years', rate: '$100/hr', availability: 'Available', rating: 4.6, avatar: 'DK', color: '#10B981' },
-    { name: 'Lisa Patel', role: 'Data Scientist', skills: ['Python', 'TensorFlow', 'SQL'], experience: '4 years', rate: '$90/hr', availability: 'On Project', rating: 4.5, avatar: 'LP', color: '#8B5CF6' },
-    { name: 'James Wilson', role: 'Mobile Developer', skills: ['React Native', 'Swift', 'Kotlin'], experience: '5 years', rate: '$88/hr', availability: 'Available', rating: 4.7, avatar: 'JW', color: '#3B82F6' },
-];
-
 export default function TalentPage() {
-    const [talent, setTalent] = useState(initialTalent);
+    const [talent, setTalent] = useState<Talent[]>([]);
+    const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
     const [tab, setTab] = useState(0);
-    const [dialogOpen, setDialogOpen] = useState(false);
-    const [form, setForm] = useState({ name: '', role: '', skills: '', experience: '', rate: '', availability: 'Available' });
+    const [open, setOpen] = useState(false);
+    const [form, setForm] = useState({ name: '', role: '', skills: '', experience: '', rate: '' });
+    const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
 
-    const filtered = talent.filter((t) => {
-        const matchesSearch = t.name.toLowerCase().includes(search.toLowerCase()) || t.role.toLowerCase().includes(search.toLowerCase());
-        if (tab === 1) return matchesSearch && t.availability === 'Available';
-        if (tab === 2) return matchesSearch && t.availability === 'On Project';
-        return matchesSearch;
-    });
+    const fetchTalent = useCallback(async () => {
+        try {
+            setLoading(true);
+            const res = await fetch('/api/talent');
+            const json = await res.json();
+            if (json.success) setTalent(json.data);
+        } catch { setSnackbar({ open: true, message: 'Failed to load talent', severity: 'error' }); }
+        finally { setLoading(false); }
+    }, []);
 
-    const handleAdd = () => {
+    useEffect(() => { fetchTalent(); }, [fetchTalent]);
+
+    const handleCreate = async () => {
         if (!form.name || !form.role) return;
-        const colors = ['#6366F1', '#F59E0B', '#EC4899', '#10B981', '#8B5CF6', '#3B82F6'];
-        setTalent((prev) => [...prev, {
-            ...form,
-            skills: form.skills.split(',').map((s) => s.trim()),
-            rating: 4.5,
-            avatar: form.name.split(' ').map((n) => n[0]).join(''),
-            color: colors[Math.floor(Math.random() * colors.length)],
-        }]);
-        setForm({ name: '', role: '', skills: '', experience: '', rate: '', availability: 'Available' });
-        setDialogOpen(false);
+        try {
+            const res = await fetch('/api/talent', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) });
+            const json = await res.json();
+            if (json.success) { setOpen(false); setForm({ name: '', role: '', skills: '', experience: '', rate: '' }); fetchTalent(); setSnackbar({ open: true, message: 'Talent added successfully', severity: 'success' }); }
+        } catch { setSnackbar({ open: true, message: 'Failed to add talent', severity: 'error' }); }
     };
 
+    const filtered = talent.filter((t) => {
+        const matchesSearch = !search || t.name.toLowerCase().includes(search.toLowerCase()) || t.role.toLowerCase().includes(search.toLowerCase());
+        const matchesTab = tab === 0 || (tab === 1 && t.availability === 'Available') || (tab === 2 && t.availability === 'On Project');
+        return matchesSearch && matchesTab;
+    });
+
+    const counts = { all: talent.length, available: talent.filter((t) => t.availability === 'Available').length, onProject: talent.filter((t) => t.availability === 'On Project').length };
+
+    if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}><CircularProgress /></Box>;
+
     return (
-        <Box sx={{ px: 3.5, py: 3 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                <Box>
-                    <Typography variant="h4" sx={{ fontWeight: 700, color: '#1E293B', fontSize: '1.5rem' }}>Talent Pool</Typography>
-                    <Typography variant="body2" sx={{ color: '#64748B' }}>{talent.length} professionals available</Typography>
-                </Box>
-                <Button variant="contained" startIcon={<AddIcon />} onClick={() => setDialogOpen(true)} sx={{ bgcolor: '#6366F1', borderRadius: '10px', textTransform: 'none', fontWeight: 600, '&:hover': { bgcolor: '#4F46E5' } }}>
-                    Add Talent
-                </Button>
+        <Box>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
+                <Box><Typography variant="h4" sx={{ fontWeight: 700, color: '#1E293B', fontSize: '1.5rem', mb: 0.5 }}>Talent Pool</Typography><Typography variant="body2" sx={{ color: '#64748B' }}>{counts.all} professionals available</Typography></Box>
+                <Button variant="contained" startIcon={<AddIcon />} onClick={() => setOpen(true)} sx={{ bgcolor: '#2563EB', '&:hover': { bgcolor: '#1D4ED8' }, borderRadius: '10px', textTransform: 'none', fontWeight: 600 }}>Add Talent</Button>
             </Box>
-
-            <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
-                <Paper sx={{ display: 'flex', alignItems: 'center', px: 2, py: 0.5, borderRadius: '10px', border: '1px solid #E2E8F0', flex: 1, boxShadow: 'none' }}>
-                    <SearchIcon sx={{ color: '#94A3B8', mr: 1 }} />
-                    <InputBase placeholder="Search talent..." value={search} onChange={(e) => setSearch(e.target.value)} sx={{ flex: 1, fontSize: '0.9rem' }} />
-                </Paper>
-            </Box>
-
-            <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 3, '& .MuiTab-root': { textTransform: 'none', fontWeight: 500, fontSize: '0.85rem' }, '& .Mui-selected': { color: '#6366F1 !important' }, '& .MuiTabs-indicator': { bgcolor: '#6366F1' } }}>
-                <Tab label={`All (${talent.length})`} />
-                <Tab label={`Available (${talent.filter((t) => t.availability === 'Available').length})`} />
-                <Tab label={`On Project (${talent.filter((t) => t.availability === 'On Project').length})`} />
+            <TextField fullWidth placeholder="Search talent..." value={search} onChange={(e) => setSearch(e.target.value)} InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon sx={{ color: '#94A3B8' }} /></InputAdornment> }} sx={{ mb: 2, '& .MuiOutlinedInput-root': { borderRadius: '12px', bgcolor: '#fff', '& fieldset': { borderColor: '#E2E8F0' } } }} />
+            <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 3, '& .MuiTab-root': { textTransform: 'none', fontWeight: 600, fontSize: '0.85rem' }, '& .Mui-selected': { color: '#2563EB' }, '& .MuiTabs-indicator': { backgroundColor: '#2563EB' } }}>
+                <Tab label={`All (${counts.all})`} /><Tab label={`Available (${counts.available})`} /><Tab label={`On Project (${counts.onProject})`} />
             </Tabs>
-
             <Grid container spacing={2.5}>
-                {filtered.map((person, i) => (
-                    <Grid size={{ xs: 12, sm: 6, md: 4 }} key={i}>
+                {filtered.map((t) => (
+                    <Grid size={{ xs: 12, sm: 6, md: 4 }} key={t._id}>
                         <Card sx={{ p: 2.5, borderRadius: '14px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', '&:hover': { boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }, transition: 'box-shadow 0.2s' }}>
-                            <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-                                <Avatar sx={{ bgcolor: person.color, width: 48, height: 48, fontWeight: 600 }}>{person.avatar}</Avatar>
-                                <Box sx={{ flex: 1 }}>
-                                    <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#1E293B', fontSize: '0.9rem' }}>{person.name}</Typography>
-                                    <Typography variant="caption" sx={{ color: '#64748B' }}>{person.role}</Typography>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                                    <Avatar sx={{ bgcolor: t.color, width: 40, height: 40, fontWeight: 600, fontSize: '0.85rem' }}>{t.name.split(' ').map((n) => n[0]).join('')}</Avatar>
+                                    <Box><Typography variant="subtitle2" sx={{ fontWeight: 600 }}>{t.name}</Typography><Typography variant="caption" sx={{ color: '#64748B' }}>{t.role}</Typography></Box>
                                 </Box>
-                                <Chip label={person.availability} size="small" sx={{ bgcolor: person.availability === 'Available' ? '#DCFCE7' : '#FEF3C7', color: person.availability === 'Available' ? '#16A34A' : '#D97706', fontWeight: 600, fontSize: '0.65rem', height: 22 }} />
+                                <Chip label={t.availability} size="small" sx={{ bgcolor: t.availability === 'Available' ? '#DCFCE7' : '#FEF3C7', color: t.availability === 'Available' ? '#16A34A' : '#D97706', fontWeight: 600, fontSize: '0.65rem', height: 22 }} />
                             </Box>
-                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 1.5 }}>
-                                {person.skills.map((s) => <Chip key={s} label={s} size="small" sx={{ bgcolor: '#F1F5F9', color: '#475569', fontSize: '0.65rem', height: 22 }} />)}
-                            </Box>
+                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 2 }}>{t.skills.map((s) => <Chip key={s} label={s} size="small" sx={{ bgcolor: '#F1F5F9', fontSize: '0.68rem', height: 22 }} />)}</Box>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                    <StarIcon sx={{ color: '#F59E0B', fontSize: '1rem' }} />
-                                    <Typography variant="caption" sx={{ fontWeight: 600 }}>{person.rating}</Typography>
-                                </Box>
-                                <Typography variant="caption" sx={{ color: '#64748B' }}>{person.experience}</Typography>
-                                <Typography variant="caption" sx={{ fontWeight: 700, color: '#1E293B' }}>{person.rate}</Typography>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}><StarIcon sx={{ fontSize: '0.9rem', color: '#F59E0B' }} /><Typography variant="caption" sx={{ fontWeight: 600 }}>{t.rating}</Typography><Typography variant="caption" sx={{ color: '#94A3B8', ml: 1 }}>{t.experience}</Typography></Box>
+                                <Typography variant="body2" sx={{ fontWeight: 700 }}>{t.rate}</Typography>
                             </Box>
                         </Card>
                     </Grid>
                 ))}
             </Grid>
-
-            <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: '16px' } }}>
+            <Dialog open={open} onClose={() => setOpen(false)} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: '16px' } }}>
                 <DialogTitle sx={{ fontWeight: 700 }}>Add Talent</DialogTitle>
                 <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: '8px !important' }}>
-                    <TextField label="Full Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required size="small" />
-                    <TextField label="Role / Title" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} required size="small" />
-                    <TextField label="Skills (comma separated)" value={form.skills} onChange={(e) => setForm({ ...form, skills: e.target.value })} size="small" />
-                    <TextField label="Experience" value={form.experience} onChange={(e) => setForm({ ...form, experience: e.target.value })} size="small" />
-                    <TextField label="Hourly Rate" value={form.rate} onChange={(e) => setForm({ ...form, rate: e.target.value })} size="small" />
-                    <TextField select label="Availability" value={form.availability} onChange={(e) => setForm({ ...form, availability: e.target.value })} size="small">
-                        <MenuItem value="Available">Available</MenuItem>
-                        <MenuItem value="On Project">On Project</MenuItem>
-                    </TextField>
+                    <TextField label="Name" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} required fullWidth />
+                    <TextField label="Role" value={form.role} onChange={(e) => setForm((f) => ({ ...f, role: e.target.value }))} required fullWidth />
+                    <TextField label="Skills (comma separated)" value={form.skills} onChange={(e) => setForm((f) => ({ ...f, skills: e.target.value }))} fullWidth />
+                    <TextField label="Experience" value={form.experience} onChange={(e) => setForm((f) => ({ ...f, experience: e.target.value }))} fullWidth placeholder="e.g., 5 years" />
+                    <TextField label="Rate" value={form.rate} onChange={(e) => setForm((f) => ({ ...f, rate: e.target.value }))} fullWidth placeholder="e.g., $80/hr" />
                 </DialogContent>
-                <DialogActions sx={{ px: 3, pb: 2 }}>
-                    <Button onClick={() => setDialogOpen(false)} sx={{ color: '#64748B' }}>Cancel</Button>
-                    <Button variant="contained" onClick={handleAdd} sx={{ bgcolor: '#6366F1', '&:hover': { bgcolor: '#4F46E5' } }}>Add</Button>
+                <DialogActions sx={{ p: 2.5 }}>
+                    <Button onClick={() => setOpen(false)} sx={{ textTransform: 'none' }}>Cancel</Button>
+                    <Button variant="contained" onClick={handleCreate} sx={{ bgcolor: '#2563EB', '&:hover': { bgcolor: '#1D4ED8' }, textTransform: 'none', borderRadius: '10px' }}>Add</Button>
                 </DialogActions>
             </Dialog>
+            <Snackbar open={snackbar.open} autoHideDuration={3000} onClose={() => setSnackbar((s) => ({ ...s, open: false }))} anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}>
+                <Alert severity={snackbar.severity} variant="filled">{snackbar.message}</Alert>
+            </Snackbar>
         </Box>
     );
 }
