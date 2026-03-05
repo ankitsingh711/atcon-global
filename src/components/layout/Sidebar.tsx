@@ -26,8 +26,14 @@ import {
     Settings as SettingsIcon,
     HelpOutline as HelpIcon,
     Logout as LogoutIcon,
-    Person as FreelancerIcon,
+    Person as PersonIcon,
     Language as PortalIcon,
+    Groups as TalentIcon,
+    PeopleAlt as PeopleIcon,
+    AttachMoney as FinanceIcon,
+    SupportAgent as SupportIcon,
+    DynamicForm as FormsIcon,
+    AdminPanelSettings as AdminIcon,
 } from '@mui/icons-material';
 
 const SIDEBAR_WIDTH = 260;
@@ -45,15 +51,25 @@ const mainNavItems: NavItem[] = [
     { label: 'Contacts', icon: <ContactsIcon />, path: '/contacts' },
     { label: 'Clients', icon: <ClientsIcon />, path: '/clients' },
     { label: 'Projects', icon: <ProjectsIcon />, path: '/projects', badge: 12 },
-    { label: 'Employee Portal', icon: <FreelancerIcon />, path: '/employee' },
-    { label: 'Freelancer Portal', icon: <FreelancerIcon />, path: '/freelancer' },
+    { label: 'Talent', icon: <TalentIcon />, path: '/talent' },
+    { label: 'People', icon: <PeopleIcon />, path: '/people' },
+    { label: 'Finance', icon: <FinanceIcon />, path: '/finance' },
+    { label: 'Support', icon: <SupportIcon />, path: '/support' },
+    { label: 'Forms & Intake', icon: <FormsIcon />, path: '/forms' },
+    { label: 'Admin', icon: <AdminIcon />, path: '/admin' },
+];
+
+const portalNavItems: NavItem[] = [
     { label: 'Client Portal', icon: <PortalIcon />, path: '/client-portal' },
+    { label: 'Employee Portal', icon: <PersonIcon />, path: '/employee' },
+    { label: 'Freelancer Portal', icon: <PersonIcon />, path: '/freelancer' },
 ];
 
 const bottomNavItems: NavItem[] = [
     { label: 'Settings', icon: <SettingsIcon />, path: '/settings' },
     { label: 'Help & Support', icon: <HelpIcon />, path: '/help' },
 ];
+
 
 export default function Sidebar() {
     const pathname = usePathname();
@@ -192,6 +208,27 @@ export default function Sidebar() {
                                             badgeContent={item.badge}
                                         />
                                     )}
+                                </ListItemButton>
+                            </Link>
+                        </ListItem>
+                    ))}
+                </List>
+            </Box>
+
+            <Divider sx={{ borderColor: 'rgba(255,255,255,0.06)', mx: 2, my: 0.5 }} />
+
+            {/* Portal links */}
+            <Box sx={{ px: 1.5, py: 0.5 }}>
+                <Typography variant="overline" sx={{ color: '#FFFFFF', fontSize: '0.6rem', fontWeight: 600, letterSpacing: '0.1em', px: 1.5, py: 0.5, display: 'block' }}>
+                    Switch to Portal View:
+                </Typography>
+                <List disablePadding>
+                    {portalNavItems.map((item) => (
+                        <ListItem key={item.label} disablePadding sx={{ mb: 0.2 }}>
+                            <Link href={item.path} passHref style={{ textDecoration: 'none', width: '100%' }}>
+                                <ListItemButton sx={{ borderRadius: '10px', py: 0.7, px: 1.5, color: '#FFFFFF', '&:hover': { backgroundColor: 'rgba(255,255,255,0.05)' } }}>
+                                    <ListItemIcon sx={{ minWidth: 32, color: '#FFFFFF', '& .MuiSvgIcon-root': { fontSize: '1.1rem' } }}>{item.icon}</ListItemIcon>
+                                    <ListItemText primary={item.label} primaryTypographyProps={{ fontSize: '0.78rem' }} />
                                 </ListItemButton>
                             </Link>
                         </ListItem>
