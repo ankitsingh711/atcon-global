@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
     Box, Typography, Card, Grid, Chip, Tabs, Tab, Button, Avatar,
     Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, CircularProgress, Snackbar, Alert,
+    Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem,
 } from '@mui/material';
 import { TrendingUp as UpIcon, TrendingDown as DownIcon, AttachMoney as MoneyIcon, AccountBalance as BankIcon, NoteAdd as InvoiceIcon } from '@mui/icons-material';
 
@@ -16,13 +17,40 @@ export default function FinancePage() {
     const [invoices, setInvoices] = useState<InvoiceData[]>([]);
     const [loading, setLoading] = useState(true);
     const [tab, setTab] = useState(0);
-    const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'error' as 'error' });
+    const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'error' as 'error' | 'success' });
+    const [modalOpen, setModalOpen] = useState(false);
+    const [formData, setFormData] = useState({ client: '', amount: '', status: 'Pending', dueDate: '' });
 
     const fetchFinance = useCallback(async () => {
         try { setLoading(true); const res = await fetch('/api/finance'); const json = await res.json(); if (json.success) { setStats(json.data.stats); setInvoices(json.data.invoices); } }
         catch { setSnackbar({ open: true, message: 'Failed to load finance data', severity: 'error' }); }
         finally { setLoading(false); }
     }, []);
+
+    const handleCreateInvoice = async () => {
+        if (!formData.client || !formData.amount || !formData.dueDate) {
+            setSnackbar({ open: true, message: 'Please fill all required fields.', severity: 'error' });
+            return;
+        }
+        try {
+            const res = await fetch('/api/invoices', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData),
+            });
+            const json = await res.json();
+            if (json.success) {
+                setSnackbar({ open: true, message: 'Invoice created successfully!', severity: 'success' });
+                setModalOpen(false);
+                setFormData({ client: '', amount: '', status: 'Pending', dueDate: '' });
+                fetchFinance();
+            } else {
+                setSnackbar({ open: true, message: json.error || 'Failed to create invoice.', severity: 'error' });
+            }
+        } catch (error) {
+            setSnackbar({ open: true, message: 'An error occurred.', severity: 'error' });
+        }
+    };
 
     useEffect(() => { fetchFinance(); }, [fetchFinance]);
 
@@ -39,7 +67,7 @@ export default function FinancePage() {
         <Box>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
                 <Box><Typography variant="h4" sx={{ fontWeight: 700, color: '#1E293B', fontSize: '1.5rem', mb: 0.5 }}>Finance</Typography><Typography variant="body2" sx={{ color: '#64748B' }}>Financial overview and invoicing</Typography></Box>
-                <Button variant="contained" startIcon={<InvoiceIcon />} sx={{ bgcolor: '#16A34A', '&:hover': { bgcolor: '#15803D' }, borderRadius: '10px', textTransform: 'none', fontWeight: 600 }}>Create Invoice</Button>
+                <Button onClick={() => setModalOpen(true)} variant="contained" startIcon={<InvoiceIcon />} sx={{ bgcolor: '#16A34A', '&:hover': { bgcolor: '#15803D' }, borderRadius: '10px', textTransform: 'none', fontWeight: 600 }}>Create Invoice</Button>
             </Box>
             <Grid container spacing={2} sx={{ mb: 3 }}>
                 {statCards.map((s) => (
@@ -73,6 +101,25 @@ export default function FinancePage() {
                     ))}</TableBody>
                 </Table></TableContainer>
             </Paper>
+
+            <Dialog open={modalOpen} onClose={() => setModalOpen(false)} maxWidth="sm" fullWidth>
+                <DialogTitle sx={{ fontWeight: 700 }}>Create New Invoice</DialogTitle>
+                <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
+                    <TextField label="Client Name" fullWidth size="small" value={formData.client} onChange={(e) => setFormData({ ...formData, client: e.target.value })} required />
+                    <TextField label="Amount ($)" type="number" fullWidth size="small" value={formData.amount} onChange={(e) => setFormData({ ...formData, amount: e.target.value })} required />
+                    <TextField label="Due Date" type="date" fullWidth size="small" slotProps={{ inputLabel: { shrink: true } }} value={formData.dueDate} onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })} required />
+                    <TextField select label="Status" fullWidth size="small" value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value })}>
+                        <MenuItem value="Pending">Pending</MenuItem>
+                        <MenuItem value="Paid">Paid</MenuItem>
+                        <MenuItem value="Overdue">Overdue</MenuItem>
+                    </TextField>
+                </DialogContent>
+                <DialogActions sx={{ p: 2, pt: 0 }}>
+                    <Button onClick={() => setModalOpen(false)} sx={{ color: '#64748B' }}>Cancel</Button>
+                    <Button onClick={handleCreateInvoice} variant="contained" sx={{ bgcolor: '#16A34A', '&:hover': { bgcolor: '#15803D' } }}>Create</Button>
+                </DialogActions>
+            </Dialog>
+
             <Snackbar open={snackbar.open} autoHideDuration={3000} onClose={() => setSnackbar((s) => ({ ...s, open: false }))} anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}><Alert severity={snackbar.severity} variant="filled">{snackbar.message}</Alert></Snackbar>
         </Box>
     );

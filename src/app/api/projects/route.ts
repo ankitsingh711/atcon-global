@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createObjectId, getStore, ProjectRecord } from '@/lib/memory-store';
 
+export const dynamic = 'force-dynamic';
+
 function compareValues(left: unknown, right: unknown): number {
     if (typeof left === 'number' && typeof right === 'number') {
         return left - right;

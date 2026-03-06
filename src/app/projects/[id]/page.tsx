@@ -27,6 +27,11 @@ import {
     TextField,
     InputAdornment,
     Paper,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogContentText,
+    DialogActions,
 } from '@mui/material';
 import {
     ArrowBack as BackIcon,
@@ -180,6 +185,7 @@ export default function ProjectDetailPage() {
     const dispatch = useAppDispatch();
     const { selectedProject: project, loading } = useAppSelector((state) => state.projects);
     const [activeTab, setActiveTab] = useState(0);
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
     const projectId = params?.id as string;
 
@@ -197,11 +203,18 @@ export default function ProjectDetailPage() {
         }
     };
 
-    const handleDelete = async () => {
-        if (window.confirm('Are you sure you want to delete this project? This action cannot be undone.')) {
-            await dispatch(deleteProject(projectId));
-            router.push('/projects');
-        }
+    const handleDeleteClick = () => {
+        setIsDeleteDialogOpen(true);
+    };
+
+    const handleConfirmDelete = async () => {
+        setIsDeleteDialogOpen(false);
+        await dispatch(deleteProject(projectId));
+        router.push('/projects');
+    };
+
+    const handleCancelDelete = () => {
+        setIsDeleteDialogOpen(false);
     };
 
     const formatDate = (dateStr: string) => {
@@ -257,7 +270,7 @@ export default function ProjectDetailPage() {
                     <Button
                         variant="outlined"
                         startIcon={<DeleteIcon />}
-                        onClick={handleDelete}
+                        onClick={handleDeleteClick}
                         sx={{ color: '#EF4444', borderColor: '#FEE2E2', '&:hover': { borderColor: '#EF4444', backgroundColor: '#FEF2F2' } }}
                     >
                         Delete
@@ -642,6 +655,24 @@ export default function ProjectDetailPage() {
                     </TableContainer>
                 </Paper>
             </TabPanel>
+
+            {/* Delete Confirmation Modal */}
+            <Dialog open={isDeleteDialogOpen} onClose={handleCancelDelete}>
+                <DialogTitle sx={{ fontWeight: 600, color: '#1E293B' }}>Delete Project</DialogTitle>
+                <DialogContent>
+                    <DialogContentText sx={{ color: '#475569' }}>
+                        Are you sure you want to delete this project? This action cannot be undone.
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions sx={{ px: 3, pb: 2 }}>
+                    <Button onClick={handleCancelDelete} sx={{ color: '#64748B' }}>
+                        Cancel
+                    </Button>
+                    <Button onClick={handleConfirmDelete} variant="contained" color="error" sx={{ backgroundColor: '#EF4444', '&:hover': { backgroundColor: '#DC2626' } }}>
+                        Delete
+                    </Button>
+                </DialogActions>
+            </Dialog>
 
             <ProjectDrawer />
         </Box>
