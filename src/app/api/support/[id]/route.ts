@@ -12,10 +12,10 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         }
 
         const body = await request.json();
-        const { status } = body;
+        const { status, priority } = body;
 
-        if (!status) {
-            return NextResponse.json({ success: false, error: 'Status is required' }, { status: 400 });
+        if (!status && !priority) {
+            return NextResponse.json({ success: false, error: 'Status or Priority is required' }, { status: 400 });
         }
 
         const store = getStore();
@@ -25,7 +25,9 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
             return NextResponse.json({ success: false, error: 'Ticket not found' }, { status: 404 });
         }
 
-        ticket.status = status;
+        if (status) ticket.status = status;
+        if (priority) ticket.priority = priority;
+
         touchRecord(ticket);
 
         return NextResponse.json({ success: true, data: ticket }, { status: 200 });

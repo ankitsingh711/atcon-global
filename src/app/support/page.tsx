@@ -46,6 +46,25 @@ export default function SupportPage() {
         }
     };
 
+    const handlePriorityChange = async (id: string, newPriority: string) => {
+        try {
+            const res = await fetch(`/api/support/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ priority: newPriority }),
+            });
+            const json = await res.json();
+            if (json.success) {
+                setSnackbar({ open: true, message: 'Ticket priority updated!', severity: 'success' });
+                fetchTickets();
+            } else {
+                setSnackbar({ open: true, message: json.error || 'Failed to update ticket.', severity: 'error' });
+            }
+        } catch (error) {
+            setSnackbar({ open: true, message: 'An error occurred.', severity: 'error' });
+        }
+    };
+
     useEffect(() => { fetchTickets(); }, [fetchTickets]);
 
     const handleCreate = async () => {
@@ -84,7 +103,26 @@ export default function SupportPage() {
                             <TableCell sx={{ fontWeight: 600, color: '#6366F1', fontSize: '0.82rem' }}>{t.ticketId}</TableCell>
                             <TableCell sx={{ fontWeight: 500, fontSize: '0.82rem' }}>{t.title}</TableCell>
                             <TableCell sx={{ color: '#475569', fontSize: '0.82rem' }}>{t.client}</TableCell>
-                            <TableCell><Chip label={t.priority} size="small" sx={{ bgcolor: (pst[t.priority] || pst['Medium']).bg, color: (pst[t.priority] || pst['Medium']).text, fontWeight: 600, fontSize: '0.68rem', height: 22 }} /></TableCell>
+                            <TableCell>
+                                <TextField
+                                    select
+                                    size="small"
+                                    value={t.priority}
+                                    onChange={(e) => handlePriorityChange(t._id, e.target.value)}
+                                    variant="standard"
+                                    InputProps={{ disableUnderline: true }}
+                                    sx={{
+                                        '& .MuiSelect-select': {
+                                            py: 0.3, px: 1, borderRadius: '4px',
+                                            bgcolor: (pst[t.priority] || pst['Medium']).bg,
+                                            color: (pst[t.priority] || pst['Medium']).text,
+                                            fontWeight: 600, fontSize: '0.68rem',
+                                        }
+                                    }}
+                                >
+                                    {['High', 'Medium', 'Low'].map(s => <MenuItem key={s} value={s} sx={{ fontSize: '0.8rem' }}>{s}</MenuItem>)}
+                                </TextField>
+                            </TableCell>
                             <TableCell>
                                 <TextField
                                     select
