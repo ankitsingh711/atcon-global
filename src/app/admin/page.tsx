@@ -25,7 +25,7 @@ export default function AdminPage() {
     const fetchStats = useCallback(async () => {
         try {
             setLoading(true);
-            const res = await fetch('/api/dashboard');
+            const res = await fetch('/api/admin');
             const json = await res.json();
             if (json.success) {
                 setStats({
