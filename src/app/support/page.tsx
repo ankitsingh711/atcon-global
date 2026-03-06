@@ -4,6 +4,7 @@ import {
     Box, Typography, Card, Grid, Chip, TextField, InputAdornment, Button,
     Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper,
     Dialog, DialogTitle, DialogContent, DialogActions, CircularProgress, Snackbar, Alert, MenuItem,
+    Select, FormControl,
 } from '@mui/material';
 import { Search as SearchIcon, Add as AddIcon } from '@mui/icons-material';
 
@@ -25,6 +26,25 @@ export default function SupportPage() {
         catch { setSnackbar({ open: true, message: 'Failed to load tickets', severity: 'error' }); }
         finally { setLoading(false); }
     }, []);
+
+    const handleStatusChange = async (id: string, newStatus: string) => {
+        try {
+            const res = await fetch(`/api/support/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: newStatus }),
+            });
+            const json = await res.json();
+            if (json.success) {
+                setSnackbar({ open: true, message: 'Ticket status updated!', severity: 'success' });
+                fetchTickets();
+            } else {
+                setSnackbar({ open: true, message: json.error || 'Failed to update ticket.', severity: 'error' });
+            }
+        } catch (error) {
+            setSnackbar({ open: true, message: 'An error occurred.', severity: 'error' });
+        }
+    };
 
     useEffect(() => { fetchTickets(); }, [fetchTickets]);
 
@@ -65,7 +85,26 @@ export default function SupportPage() {
                             <TableCell sx={{ fontWeight: 500, fontSize: '0.82rem' }}>{t.title}</TableCell>
                             <TableCell sx={{ color: '#475569', fontSize: '0.82rem' }}>{t.client}</TableCell>
                             <TableCell><Chip label={t.priority} size="small" sx={{ bgcolor: (pst[t.priority] || pst['Medium']).bg, color: (pst[t.priority] || pst['Medium']).text, fontWeight: 600, fontSize: '0.68rem', height: 22 }} /></TableCell>
-                            <TableCell><Chip label={t.status} size="small" sx={{ bgcolor: (sst[t.status] || sst['Open']).bg, color: (sst[t.status] || sst['Open']).text, fontWeight: 600, fontSize: '0.68rem', height: 22 }} /></TableCell>
+                            <TableCell>
+                                <TextField
+                                    select
+                                    size="small"
+                                    value={t.status}
+                                    onChange={(e) => handleStatusChange(t._id, e.target.value)}
+                                    variant="standard"
+                                    InputProps={{ disableUnderline: true }}
+                                    sx={{
+                                        '& .MuiSelect-select': {
+                                            py: 0.3, px: 1, borderRadius: '4px',
+                                            bgcolor: (sst[t.status] || sst['Open']).bg,
+                                            color: (sst[t.status] || sst['Open']).text,
+                                            fontWeight: 600, fontSize: '0.68rem',
+                                        }
+                                    }}
+                                >
+                                    {['Open', 'In Progress', 'Resolved'].map(s => <MenuItem key={s} value={s} sx={{ fontSize: '0.8rem' }}>{s}</MenuItem>)}
+                                </TextField>
+                            </TableCell>
                             <TableCell sx={{ color: '#475569', fontSize: '0.82rem' }}>{t.assignee}</TableCell>
                         </TableRow>
                     ))}</TableBody>

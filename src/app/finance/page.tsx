@@ -27,6 +27,25 @@ export default function FinancePage() {
         finally { setLoading(false); }
     }, []);
 
+    const handleStatusChange = async (id: string, newStatus: string) => {
+        try {
+            const res = await fetch(`/api/invoices/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: newStatus }),
+            });
+            const json = await res.json();
+            if (json.success) {
+                setSnackbar({ open: true, message: 'Invoice status updated!', severity: 'success' });
+                fetchFinance();
+            } else {
+                setSnackbar({ open: true, message: json.error || 'Failed to update invoice.', severity: 'error' });
+            }
+        } catch (error) {
+            setSnackbar({ open: true, message: 'An error occurred.', severity: 'error' });
+        }
+    };
+
     const handleCreateInvoice = async () => {
         if (!formData.client || !formData.amount || !formData.dueDate) {
             setSnackbar({ open: true, message: 'Please fill all required fields.', severity: 'error' });
@@ -96,7 +115,26 @@ export default function FinancePage() {
                             <TableCell sx={{ fontWeight: 600, fontSize: '0.82rem' }}>{inv.amount}</TableCell>
                             <TableCell sx={{ color: '#94A3B8', fontSize: '0.82rem' }}>{inv.date}</TableCell>
                             <TableCell sx={{ color: '#94A3B8', fontSize: '0.82rem' }}>{inv.dueDate}</TableCell>
-                            <TableCell><Chip label={inv.status} size="small" sx={{ bgcolor: (ist[inv.status] || ist['Pending']).bg, color: (ist[inv.status] || ist['Pending']).text, fontWeight: 600, fontSize: '0.68rem', height: 22 }} /></TableCell>
+                            <TableCell>
+                                <TextField
+                                    select
+                                    size="small"
+                                    value={inv.status}
+                                    onChange={(e) => handleStatusChange(inv._id, e.target.value)}
+                                    variant="standard"
+                                    InputProps={{ disableUnderline: true }}
+                                    sx={{
+                                        '& .MuiSelect-select': {
+                                            py: 0.3, px: 1, borderRadius: '4px',
+                                            bgcolor: (ist[inv.status] || ist['Pending']).bg,
+                                            color: (ist[inv.status] || ist['Pending']).text,
+                                            fontWeight: 600, fontSize: '0.68rem',
+                                        }
+                                    }}
+                                >
+                                    {['Paid', 'Pending', 'Overdue'].map(s => <MenuItem key={s} value={s} sx={{ fontSize: '0.8rem' }}>{s}</MenuItem>)}
+                                </TextField>
+                            </TableCell>
                         </TableRow>
                     ))}</TableBody>
                 </Table></TableContainer>
